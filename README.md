@@ -1,5 +1,7 @@
 # qoiuy.github.io
 
-##	[Use jekyll](http://jekyll.bootcss.com)
+##	[Use By jekyll](http://jekyll.bootcss.com)
 
-##	[Template Jekyll-Mono](http://jekyllthemes.org/themes/Jekyll-Mono/)
+##	[Template By Jekyll-Mono](http://jekyllthemes.org/themes/Jekyll-Mono/)
+
+##	[Write By Haroopad](https://github.com/rhiokim/haroopad/)
