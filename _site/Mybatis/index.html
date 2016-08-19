@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Mybatis – Lilac – A Novice Programmer</title>
+
+        <meta charset="utf-8" />
+    <meta content='text/html; charset=utf-8' http-equiv='Content-Type'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0'>
+
+    
+    <meta name="description" content="简介
+MyBatis SQL Mapper Framework for Java．
+Mybatis的中文官网
+Mybatis项目代码库
+
+" />
+    <meta property="og:description" content="简介
+MyBatis SQL Mapper Framework for Java．
+Mybatis的中文官网
+Mybatis项目代码库
+
+" />
+    
+    <meta name="author" content="Lilac" />
+
+    
+    <meta property="og:title" content="Mybatis" />
+    <meta property="twitter:title" content="Mybatis" />
+    
+
+    <!--[if lt IE 9]>
+      <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <link rel="stylesheet" type="text/css" href="/style.css" />
+    <link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+    <link rel="alternate" type="application/rss+xml" title="Lilac - A Novice Programmer" href="/feed.xml" />
+    <link href='http://fonts.googleapis.com/css?family=Roboto:400,100,100italic,300,300italic,400italic,500,500italic,700,700italic,900,900italic' rel='stylesheet' type='text/css'>
+
+  </head>
+
+  <body>
+    
+    
+    <div class="intro-header">    
+      <div class="container">
+        <div class="post-heading">
+            <h1>Mybatis</h1>
+            <span class="meta">Posted by <a href="/about"> Lilac
+            </a> on August 17, 2016
+            <a href="/"> { Return to Blog }</a>
+            </span>
+        </div>
+            
+      </div>
+    </div>
+    
+
+    <div id="main" role="main" class="container">
+      <article class="post">
+ <div class="space-extra-small">
+ </div>
+
+  <div class="entry">
+    <h3 id="section">简介</h3>
+<p>MyBatis SQL Mapper Framework for Java．
+<a href="http://www.mybatis.org/mybatis-3/zh/index.html">Mybatis的中文官网</a>
+<a href="https://github.com/mybatis/mybatis-3">Mybatis项目代码库</a></p>
+
+<h3 id="mybatis">Mybatis框架原理</h3>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>		文件SqlMap.xml
+			|
+		全局配置文件ConfigMap.xml
+			|
+      应用程序--&gt;SqlSessionFactoryBuilder.build()
+                	|
+                SqlSessionFactory.openSession()
+                	|
+      参数-----&gt;SqlSession.selectOne() ---&gt;输出
+                	|
+                    	DB
+</code></pre>
+</div>
+
+<h3 id="curd">基本映射文件书写(CURD)</h3>
+<div class="highlighter-rouge"><pre class="highlight"><code>#{}：代表占位符
+${}:代表连接符
+
+Create
+　添加用户信息
+    &lt;insert id="insertUser" parameterType="myBatis.inDoor.demo.pojo.User"&gt;
+    	insert into user(username,birthday,sex,address) values(#{username},#{birthday},#{sex},#{address})
+    &lt;/insert&gt;
+Update
+　更新用户信息
+    &lt;update id="updateUserById" parameterType="myBatis.inDoor.demo.pojo.User"&gt;
+    	update user set username=#{username},birthday=#{birthday},sex=#{sex},address=#{address} where id = #{id}
+    &lt;/update&gt;
+Retrieve
+　根据id查询信息
+    &lt;select id="queryUserById" parameterType="int" resultType="User"&gt;
+        select * from user where id = #{id}
+    &lt;/select&gt;
+　根据username查询用户信息
+    &lt;select id="queryUserByUserName" parameterType="string" resultType="user"&gt;
+        select * from user where username like '%${value}%'
+    &lt;/select&gt;
+Delete
+　删除用户信息
+    &lt;delete id="deleteUserById" parameterType="int"&gt;
+        delete from user where id = #{id}
+    &lt;/delete&gt;
+</code></pre>
+</div>
+
+<h3 id="section-1">三个对象的最佳使用范围</h3>
+<div class="highlighter-rouge"><pre class="highlight"><code>SqlSessionFactoryBuilder
+作用：用来加载mybatis的全局配置文件，产生会话工厂。
+最佳使用范围：当做工具类来使用，而且作为局部变量
+
+SqlSessionFactory
+作用：产生会话
+维护方式：通过单例来维护
+
+SqlSession
+作用：通过API调用指定的sql，并返回结果
+最佳使用范围：作为一个局部变量来使用 ###	Mybatis Dao开发 ###	Mybatis Mapper代理Dao开发 ###	Mybatis 全局配置文件 ###	mybatis的输入映射和输出映射 ###	Mybatis的动态sql ###	Mybatis高级映射
+一对一(1)
+　&lt;!-- 查询订单信息并关联查询用户信息   通过ResultType实现 --&gt;
+    &lt;select id="queryOrdersAndUserByResultType" resultType="ordersCustom"&gt;
+        SELECT
+          o.*,
+          u.username,
+          u.address
+        FROM orders o,USER u
+        WHERE u.id = o.user_id
+    &lt;/select&gt;
+一对一(2)
+　&lt;!-- 查询订单信息并关联查询用户信息   通过ResultType实现 --&gt;
+    &lt;resultMap type="orders" id="fieldIntoUser"&gt;
+        &lt;!-- 订单信息 --&gt;
+        &lt;id column="id" property="id"/&gt;
+        &lt;result column="user_id" property="userId"/&gt;
+        &lt;result column="number" property="number"/&gt;
+        &lt;result column="createtime" property="createtime"/&gt;
+        &lt;result column="note" property="note"/&gt;
+        &lt;!-- 用户信息 --&gt;
+        &lt;!-- 
+            property:指定的就是orders中user属性
+            javaType：返回的结果类型   一对一的关联关系
+         --&gt;
+        &lt;association property="user" javaType="user"&gt;
+            &lt;result column="username" property="username"/&gt;
+            &lt;result column="address" property="address"/&gt;
+        &lt;/association&gt;
+
+    &lt;/resultMap&gt;
+    &lt;select id="queryOrdersAndUserByResultMap" resultMap="fieldIntoUser"&gt;
+        SELECT
+          o.*,
+          u.username,
+          u.address
+        FROM orders o,USER u
+        WHERE u.id = o.user_id
+    &lt;/select&gt;
+一对多(1)
+　&lt;!-- 查询订单信息并关联明细信息   通过ResultMap实现 --&gt;
+    &lt;resultMap type="orders" id="fieldIntoDetail" extends="fieldIntoUser"&gt;
+        &lt;!-- 订单信息 --&gt;
+        &lt;!-- 用户信息 --&gt;
+        &lt;!-- 订单明细 --&gt;
+        &lt;collection property="orderdetails" ofType="orderdetail"&gt;
+            &lt;id column="orderdetail_id" property="id"/&gt;
+            &lt;result column="items_id" property="itemsId"/&gt;
+            &lt;result column="items_num" property="itemsNum"/&gt;
+        &lt;/collection&gt;
+    &lt;/resultMap&gt;
+    &lt;select id="queryOrdersAndDetailByResultMap" resultMap="fieldIntoDetail"&gt;
+        SELECT
+          o.*,
+          u.username,
+          u.address,
+          d.id orderdetail_id,
+          d.items_id,
+          d.items_num
+        FROM orders o,USER u,orderdetail d
+        WHERE u.id = o.user_id AND o.id = d.orders_id
+    &lt;/select&gt;
+多对多
+   	　&lt;!-- 查询用户信息并关联查询商品信息 --&gt;
+    &lt;resultMap type="user" id="allIntoUser"&gt;
+	&lt;!-- 用户信息 --&gt;
+	&lt;id column="user_id" property="id"/&gt;
+	&lt;result column="username" property="username"/&gt;
+	&lt;result column="address" property="address"/&gt;
+	&lt;!-- 订单信息 --&gt;
+	&lt;collection property="orderList" ofType="orders"&gt;
+		&lt;id column="id" property="id"/&gt;
+		&lt;result column="user_id" property="userId"/&gt;
+		&lt;result column="number" property="number"/&gt;
+		&lt;result column="createtime" property="createtime"/&gt;
+		&lt;result column="note" property="note"/&gt;
+
+	&lt;!-- 明细信息 --&gt;
+		&lt;collection property="orderdetails" ofType="orderdetail"&gt;
+			&lt;id column="orderdetail_id" property="id"/&gt;
+			&lt;result column="items_id" property="itemsId"/&gt;
+			&lt;result column="items_num" property="itemsNum"/&gt;
+
+	&lt;!-- 商品信息 --&gt;
+			&lt;association property="items" javaType="items"&gt;
+				&lt;id column="items_id" property="id"/&gt;
+				&lt;result column="name" property="name"/&gt;
+				&lt;result column="price" property="price"/&gt;
+				&lt;result column="detail" property="detail"/&gt;
+			&lt;/association&gt;
+		&lt;/collection&gt;
+	&lt;/collection&gt;
+&lt;/resultMap&gt;
+&lt;select id="queryAll" resultMap="allIntoUser"&gt;
+	SELECT
+	  o.*,
+	  u.username,
+	  u.address,
+	  d.id orderdetail_id,
+	  d.items_id,
+	  d.items_num,
+	  i.name,
+	  i.price,
+	  i.detail
+	FROM orders o,USER u,orderdetail d,items i
+	WHERE u.id = o.user_id AND o.id = d.orders_id AND i.id = d.items_id
+&lt;/select&gt;
+</code></pre>
+</div>
+
+<h3 id="mybatis-1">mybatis的延迟加载</h3>
+<div class="highlighter-rouge"><pre class="highlight"><code> &lt;!-- 查订单并延迟加载用户信息 --&gt;
+    &lt;resultMap type="orders" id="lazyLoadingUser"&gt;
+        &lt;!-- 订单信息 --&gt;
+        &lt;id column="id" property="id"/&gt;
+        &lt;result column="user_id" property="userId"/&gt;
+        &lt;result column="number" property="number"/&gt;
+        &lt;result column="createtime" property="createtime"/&gt;
+        &lt;result column="note" property="note"/&gt;
+
+        &lt;!-- 用户信息 --&gt;
+        &lt;!-- 
+            select:延迟加载的sql语句
+            column：相关表的外键
+         --&gt;
+        &lt;association property="user" javaType="user" select="queryUserById" column="user_id"&gt;&lt;/association&gt;
+    &lt;/resultMap&gt;
+    &lt;select id="queryOrdersLazyLoadingUser" resultMap="lazyLoadingUser"&gt;
+        select * from orders
+    &lt;/select&gt;
+    &lt;select id="queryUserById" parameterType="int" resultType="user"&gt;
+        select * from user where id = #{user_id}
+    &lt;/select&gt;
+    &lt;update id="updateUserById" parameterType="cn.itcast.mybatis.po.User"&gt;
+        update user set username=#{username},birthday=#{birthday},sex=#{sex},address=#{address} where id = #{id}
+    &lt;/update&gt;
+</code></pre>
+</div>
+
+<h3 id="mybatis-2">mybatis的缓存</h3>
+
+<h3 id="mybatis-3">Mybatis使用第三方缓存框架</h3>
+<ul>
+  <li>如果开发的程序部署在多台服务器上，假如用户访问A机器后，将用户的信息存储在该内存中，如果突然A机器的访问量突然变大，可能这时你再次访问A机器时，它会有负载均衡操作，将你切换到其他服务器上B，如果访问B的某个模块由于你在B机器没有登录过也就是没有用户的缓存信息，会提示你重新登录，这个时候你愿意接受么？这样的网站你还会访问么？</li>
+  <li>Mybatis的二级缓存指针对mapper级别，即namespace，所以只针对单表，而大多数的时候我们不仅仅是单表操作，这个时候数据到底缓存在哪个namespace下不确定，如果user和role两张表来说，如果将缓存信息保存在user下，如果角色的信息改变查询用户信息时关联角色信息，如果使用了user下的缓存这时结果查询的就是不正确的。</li>
+  <li>如果在items商品表的namespace下缓存了很多数量的商品，如果某一商品的数据发生commit操作，那么清空该namespace下的所有缓存，很明显这样是不可以接受的也是不合理的。</li>
+  <li>在互联网项目中，一般情况下我们都会使用第三方的缓存框架作为查询缓存使用。比如：redis、ehcache、memcache等。</li>
+  <li>aehcache介绍：整合ehcache，在分布式部署应用的时候，可以将ehcache做集群配置。一旦将应用部署在集群环境中，ehcache每一个节点维护各自的缓存数据，当某个节点的缓存数据进行更新后，这些更新的数据无法在其他节点中共享，这不仅会降低节点的运行效率而且还可能发生数据不同步的情况。例如某个网站采用A、B两个节点作为集群部署，当A节点的缓存更新后，而B节点缓存数据未更新，则可能出现用户在访问该网站时一会出现更新后的数据一会儿是未更新的数据。然而Ehcache1.7之后为集群提供了5中解决方案。Rmi、jms、ehcache server、jgroups、terracotta。在做集群是，ehcache中的所有缓存对象都必须得实现序列化，即实现serializable接口，这种其他集群方式下也必须得遵守。rmi下集群部署：</li>
+</ul>
+
+<h3 id="mybatisspring">Mybatis与Spring整合</h3>
+<p>传统dao的开发
+    １．配置文件发生变化
+    ２．Daoimpl　继承　sqlSessionDaoSupport
+    ３．加载文件发生变化
+    	String configLocation = “applicationContext.xml”;
+        applicationContext = new ClassPathXmlApplicationContext(configLocation);</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>代理开发dao
+获取Mapper即可使用
+</code></pre>
+</div>
+
+  </div>
+
+  
+</article>
+
+
+    </div>
+
+    <div class="wrapper-footer">
+      <div class="container">
+        <footer class="footer">
+            <div class="svg-icon">
+          
+<a href="mailto:iszhanggc@163.com"><i class="icon-envelope icon-2x"></i></a>
+
+
+<a href="https://github.com/Qoiuy"><i class="icon-github icon-2x"></i></a>
+
+
+
+
+
+
+
+
+            </div>
+        </footer>
+      </div>
+    </div>
+
+
+    
+
+  </body>
+</html>

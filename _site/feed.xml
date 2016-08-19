@@ -5,8 +5,8 @@
     <description>A Novice Programmer</description>
     <link>https://qoiuy.github.io/</link>
     <atom:link href="https://qoiuy.github.io/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Wed, 17 Aug 2016 18:55:40 +0800</pubDate>
-    <lastBuildDate>Wed, 17 Aug 2016 18:55:40 +0800</lastBuildDate>
+    <pubDate>Fri, 19 Aug 2016 01:48:15 +0800</pubDate>
+    <lastBuildDate>Fri, 19 Aug 2016 01:48:15 +0800</lastBuildDate>
     <generator>Jekyll v3.1.6</generator>
     
       <item>
@@ -23,6 +23,241 @@
         <pubDate>Wed, 17 Aug 2016 00:00:00 +0800</pubDate>
         <link>https://qoiuy.github.io/%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2/</link>
         <guid isPermaLink="true">https://qoiuy.github.io/%E7%AC%AC%E4%B8%80%E7%AF%87%E5%8D%9A%E5%AE%A2/</guid>
+        
+        
+      </item>
+    
+      <item>
+        <title>Mybatis</title>
+        <description>&lt;h3 id=&quot;section&quot;&gt;简介&lt;/h3&gt;
+&lt;p&gt;MyBatis SQL Mapper Framework for Java．
+&lt;a href=&quot;http://www.mybatis.org/mybatis-3/zh/index.html&quot;&gt;Mybatis的中文官网&lt;/a&gt;
+&lt;a href=&quot;https://github.com/mybatis/mybatis-3&quot;&gt;Mybatis项目代码库&lt;/a&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;mybatis&quot;&gt;Mybatis框架原理&lt;/h3&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;		文件SqlMap.xml
+			|
+		全局配置文件ConfigMap.xml
+			|
+      应用程序--&amp;gt;SqlSessionFactoryBuilder.build()
+                	|
+                SqlSessionFactory.openSession()
+                	|
+      参数-----&amp;gt;SqlSession.selectOne() ---&amp;gt;输出
+                	|
+                    	DB
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h3 id=&quot;curd&quot;&gt;基本映射文件书写(CURD)&lt;/h3&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#{}：代表占位符
+${}:代表连接符
+
+Create
+　添加用户信息
+    &amp;lt;insert id=&quot;insertUser&quot; parameterType=&quot;myBatis.inDoor.demo.pojo.User&quot;&amp;gt;
+    	insert into user(username,birthday,sex,address) values(#{username},#{birthday},#{sex},#{address})
+    &amp;lt;/insert&amp;gt;
+Update
+　更新用户信息
+    &amp;lt;update id=&quot;updateUserById&quot; parameterType=&quot;myBatis.inDoor.demo.pojo.User&quot;&amp;gt;
+    	update user set username=#{username},birthday=#{birthday},sex=#{sex},address=#{address} where id = #{id}
+    &amp;lt;/update&amp;gt;
+Retrieve
+　根据id查询信息
+    &amp;lt;select id=&quot;queryUserById&quot; parameterType=&quot;int&quot; resultType=&quot;User&quot;&amp;gt;
+        select * from user where id = #{id}
+    &amp;lt;/select&amp;gt;
+　根据username查询用户信息
+    &amp;lt;select id=&quot;queryUserByUserName&quot; parameterType=&quot;string&quot; resultType=&quot;user&quot;&amp;gt;
+        select * from user where username like &#39;%${value}%&#39;
+    &amp;lt;/select&amp;gt;
+Delete
+　删除用户信息
+    &amp;lt;delete id=&quot;deleteUserById&quot; parameterType=&quot;int&quot;&amp;gt;
+        delete from user where id = #{id}
+    &amp;lt;/delete&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h3 id=&quot;section-1&quot;&gt;三个对象的最佳使用范围&lt;/h3&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;SqlSessionFactoryBuilder
+作用：用来加载mybatis的全局配置文件，产生会话工厂。
+最佳使用范围：当做工具类来使用，而且作为局部变量
+
+SqlSessionFactory
+作用：产生会话
+维护方式：通过单例来维护
+
+SqlSession
+作用：通过API调用指定的sql，并返回结果
+最佳使用范围：作为一个局部变量来使用 ###	Mybatis Dao开发 ###	Mybatis Mapper代理Dao开发 ###	Mybatis 全局配置文件 ###	mybatis的输入映射和输出映射 ###	Mybatis的动态sql ###	Mybatis高级映射
+一对一(1)
+　&amp;lt;!-- 查询订单信息并关联查询用户信息   通过ResultType实现 --&amp;gt;
+    &amp;lt;select id=&quot;queryOrdersAndUserByResultType&quot; resultType=&quot;ordersCustom&quot;&amp;gt;
+        SELECT
+          o.*,
+          u.username,
+          u.address
+        FROM orders o,USER u
+        WHERE u.id = o.user_id
+    &amp;lt;/select&amp;gt;
+一对一(2)
+　&amp;lt;!-- 查询订单信息并关联查询用户信息   通过ResultType实现 --&amp;gt;
+    &amp;lt;resultMap type=&quot;orders&quot; id=&quot;fieldIntoUser&quot;&amp;gt;
+        &amp;lt;!-- 订单信息 --&amp;gt;
+        &amp;lt;id column=&quot;id&quot; property=&quot;id&quot;/&amp;gt;
+        &amp;lt;result column=&quot;user_id&quot; property=&quot;userId&quot;/&amp;gt;
+        &amp;lt;result column=&quot;number&quot; property=&quot;number&quot;/&amp;gt;
+        &amp;lt;result column=&quot;createtime&quot; property=&quot;createtime&quot;/&amp;gt;
+        &amp;lt;result column=&quot;note&quot; property=&quot;note&quot;/&amp;gt;
+        &amp;lt;!-- 用户信息 --&amp;gt;
+        &amp;lt;!-- 
+            property:指定的就是orders中user属性
+            javaType：返回的结果类型   一对一的关联关系
+         --&amp;gt;
+        &amp;lt;association property=&quot;user&quot; javaType=&quot;user&quot;&amp;gt;
+            &amp;lt;result column=&quot;username&quot; property=&quot;username&quot;/&amp;gt;
+            &amp;lt;result column=&quot;address&quot; property=&quot;address&quot;/&amp;gt;
+        &amp;lt;/association&amp;gt;
+
+    &amp;lt;/resultMap&amp;gt;
+    &amp;lt;select id=&quot;queryOrdersAndUserByResultMap&quot; resultMap=&quot;fieldIntoUser&quot;&amp;gt;
+        SELECT
+          o.*,
+          u.username,
+          u.address
+        FROM orders o,USER u
+        WHERE u.id = o.user_id
+    &amp;lt;/select&amp;gt;
+一对多(1)
+　&amp;lt;!-- 查询订单信息并关联明细信息   通过ResultMap实现 --&amp;gt;
+    &amp;lt;resultMap type=&quot;orders&quot; id=&quot;fieldIntoDetail&quot; extends=&quot;fieldIntoUser&quot;&amp;gt;
+        &amp;lt;!-- 订单信息 --&amp;gt;
+        &amp;lt;!-- 用户信息 --&amp;gt;
+        &amp;lt;!-- 订单明细 --&amp;gt;
+        &amp;lt;collection property=&quot;orderdetails&quot; ofType=&quot;orderdetail&quot;&amp;gt;
+            &amp;lt;id column=&quot;orderdetail_id&quot; property=&quot;id&quot;/&amp;gt;
+            &amp;lt;result column=&quot;items_id&quot; property=&quot;itemsId&quot;/&amp;gt;
+            &amp;lt;result column=&quot;items_num&quot; property=&quot;itemsNum&quot;/&amp;gt;
+        &amp;lt;/collection&amp;gt;
+    &amp;lt;/resultMap&amp;gt;
+    &amp;lt;select id=&quot;queryOrdersAndDetailByResultMap&quot; resultMap=&quot;fieldIntoDetail&quot;&amp;gt;
+        SELECT
+          o.*,
+          u.username,
+          u.address,
+          d.id orderdetail_id,
+          d.items_id,
+          d.items_num
+        FROM orders o,USER u,orderdetail d
+        WHERE u.id = o.user_id AND o.id = d.orders_id
+    &amp;lt;/select&amp;gt;
+多对多
+   	　&amp;lt;!-- 查询用户信息并关联查询商品信息 --&amp;gt;
+    &amp;lt;resultMap type=&quot;user&quot; id=&quot;allIntoUser&quot;&amp;gt;
+	&amp;lt;!-- 用户信息 --&amp;gt;
+	&amp;lt;id column=&quot;user_id&quot; property=&quot;id&quot;/&amp;gt;
+	&amp;lt;result column=&quot;username&quot; property=&quot;username&quot;/&amp;gt;
+	&amp;lt;result column=&quot;address&quot; property=&quot;address&quot;/&amp;gt;
+	&amp;lt;!-- 订单信息 --&amp;gt;
+	&amp;lt;collection property=&quot;orderList&quot; ofType=&quot;orders&quot;&amp;gt;
+		&amp;lt;id column=&quot;id&quot; property=&quot;id&quot;/&amp;gt;
+		&amp;lt;result column=&quot;user_id&quot; property=&quot;userId&quot;/&amp;gt;
+		&amp;lt;result column=&quot;number&quot; property=&quot;number&quot;/&amp;gt;
+		&amp;lt;result column=&quot;createtime&quot; property=&quot;createtime&quot;/&amp;gt;
+		&amp;lt;result column=&quot;note&quot; property=&quot;note&quot;/&amp;gt;
+
+	&amp;lt;!-- 明细信息 --&amp;gt;
+		&amp;lt;collection property=&quot;orderdetails&quot; ofType=&quot;orderdetail&quot;&amp;gt;
+			&amp;lt;id column=&quot;orderdetail_id&quot; property=&quot;id&quot;/&amp;gt;
+			&amp;lt;result column=&quot;items_id&quot; property=&quot;itemsId&quot;/&amp;gt;
+			&amp;lt;result column=&quot;items_num&quot; property=&quot;itemsNum&quot;/&amp;gt;
+
+	&amp;lt;!-- 商品信息 --&amp;gt;
+			&amp;lt;association property=&quot;items&quot; javaType=&quot;items&quot;&amp;gt;
+				&amp;lt;id column=&quot;items_id&quot; property=&quot;id&quot;/&amp;gt;
+				&amp;lt;result column=&quot;name&quot; property=&quot;name&quot;/&amp;gt;
+				&amp;lt;result column=&quot;price&quot; property=&quot;price&quot;/&amp;gt;
+				&amp;lt;result column=&quot;detail&quot; property=&quot;detail&quot;/&amp;gt;
+			&amp;lt;/association&amp;gt;
+		&amp;lt;/collection&amp;gt;
+	&amp;lt;/collection&amp;gt;
+&amp;lt;/resultMap&amp;gt;
+&amp;lt;select id=&quot;queryAll&quot; resultMap=&quot;allIntoUser&quot;&amp;gt;
+	SELECT
+	  o.*,
+	  u.username,
+	  u.address,
+	  d.id orderdetail_id,
+	  d.items_id,
+	  d.items_num,
+	  i.name,
+	  i.price,
+	  i.detail
+	FROM orders o,USER u,orderdetail d,items i
+	WHERE u.id = o.user_id AND o.id = d.orders_id AND i.id = d.items_id
+&amp;lt;/select&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h3 id=&quot;mybatis-1&quot;&gt;mybatis的延迟加载&lt;/h3&gt;
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt; &amp;lt;!-- 查订单并延迟加载用户信息 --&amp;gt;
+    &amp;lt;resultMap type=&quot;orders&quot; id=&quot;lazyLoadingUser&quot;&amp;gt;
+        &amp;lt;!-- 订单信息 --&amp;gt;
+        &amp;lt;id column=&quot;id&quot; property=&quot;id&quot;/&amp;gt;
+        &amp;lt;result column=&quot;user_id&quot; property=&quot;userId&quot;/&amp;gt;
+        &amp;lt;result column=&quot;number&quot; property=&quot;number&quot;/&amp;gt;
+        &amp;lt;result column=&quot;createtime&quot; property=&quot;createtime&quot;/&amp;gt;
+        &amp;lt;result column=&quot;note&quot; property=&quot;note&quot;/&amp;gt;
+
+        &amp;lt;!-- 用户信息 --&amp;gt;
+        &amp;lt;!-- 
+            select:延迟加载的sql语句
+            column：相关表的外键
+         --&amp;gt;
+        &amp;lt;association property=&quot;user&quot; javaType=&quot;user&quot; select=&quot;queryUserById&quot; column=&quot;user_id&quot;&amp;gt;&amp;lt;/association&amp;gt;
+    &amp;lt;/resultMap&amp;gt;
+    &amp;lt;select id=&quot;queryOrdersLazyLoadingUser&quot; resultMap=&quot;lazyLoadingUser&quot;&amp;gt;
+        select * from orders
+    &amp;lt;/select&amp;gt;
+    &amp;lt;select id=&quot;queryUserById&quot; parameterType=&quot;int&quot; resultType=&quot;user&quot;&amp;gt;
+        select * from user where id = #{user_id}
+    &amp;lt;/select&amp;gt;
+    &amp;lt;update id=&quot;updateUserById&quot; parameterType=&quot;cn.itcast.mybatis.po.User&quot;&amp;gt;
+        update user set username=#{username},birthday=#{birthday},sex=#{sex},address=#{address} where id = #{id}
+    &amp;lt;/update&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h3 id=&quot;mybatis-2&quot;&gt;mybatis的缓存&lt;/h3&gt;
+
+&lt;h3 id=&quot;mybatis-3&quot;&gt;Mybatis使用第三方缓存框架&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;如果开发的程序部署在多台服务器上，假如用户访问A机器后，将用户的信息存储在该内存中，如果突然A机器的访问量突然变大，可能这时你再次访问A机器时，它会有负载均衡操作，将你切换到其他服务器上B，如果访问B的某个模块由于你在B机器没有登录过也就是没有用户的缓存信息，会提示你重新登录，这个时候你愿意接受么？这样的网站你还会访问么？&lt;/li&gt;
+  &lt;li&gt;Mybatis的二级缓存指针对mapper级别，即namespace，所以只针对单表，而大多数的时候我们不仅仅是单表操作，这个时候数据到底缓存在哪个namespace下不确定，如果user和role两张表来说，如果将缓存信息保存在user下，如果角色的信息改变查询用户信息时关联角色信息，如果使用了user下的缓存这时结果查询的就是不正确的。&lt;/li&gt;
+  &lt;li&gt;如果在items商品表的namespace下缓存了很多数量的商品，如果某一商品的数据发生commit操作，那么清空该namespace下的所有缓存，很明显这样是不可以接受的也是不合理的。&lt;/li&gt;
+  &lt;li&gt;在互联网项目中，一般情况下我们都会使用第三方的缓存框架作为查询缓存使用。比如：redis、ehcache、memcache等。&lt;/li&gt;
+  &lt;li&gt;aehcache介绍：整合ehcache，在分布式部署应用的时候，可以将ehcache做集群配置。一旦将应用部署在集群环境中，ehcache每一个节点维护各自的缓存数据，当某个节点的缓存数据进行更新后，这些更新的数据无法在其他节点中共享，这不仅会降低节点的运行效率而且还可能发生数据不同步的情况。例如某个网站采用A、B两个节点作为集群部署，当A节点的缓存更新后，而B节点缓存数据未更新，则可能出现用户在访问该网站时一会出现更新后的数据一会儿是未更新的数据。然而Ehcache1.7之后为集群提供了5中解决方案。Rmi、jms、ehcache server、jgroups、terracotta。在做集群是，ehcache中的所有缓存对象都必须得实现序列化，即实现serializable接口，这种其他集群方式下也必须得遵守。rmi下集群部署：&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;mybatisspring&quot;&gt;Mybatis与Spring整合&lt;/h3&gt;
+&lt;p&gt;传统dao的开发
+    １．配置文件发生变化
+    ２．Daoimpl　继承　sqlSessionDaoSupport
+    ３．加载文件发生变化
+    	String configLocation = “applicationContext.xml”;
+        applicationContext = new ClassPathXmlApplicationContext(configLocation);&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;代理开发dao
+获取Mapper即可使用
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+</description>
+        <pubDate>Wed, 17 Aug 2016 00:00:00 +0800</pubDate>
+        <link>https://qoiuy.github.io/Mybatis/</link>
+        <guid isPermaLink="true">https://qoiuy.github.io/Mybatis/</guid>
         
         
       </item>
