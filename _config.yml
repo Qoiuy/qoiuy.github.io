@@ -1,3 +1,4 @@
+# -*- encoding : utf-8 -*-
 # Site settings
 title: Qoiuy's Blog
 SEOTitle:  
@@ -46,9 +47,9 @@ kramdown:
 #disqus_username: _your_disqus_short_name_
 
 # Duoshuo settings
-duoshuo_username: huxblog
+duoshuo_username: qoiuy 
 # Share component is depend on Comment so we can NOT use share only.
-duoshuo_share: true                     # set to false if you want to use Comment without Sharing
+duoshuo_share:  false                     # set to false if you want to use Comment without Sharing
 
 
 
