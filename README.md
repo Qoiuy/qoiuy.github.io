@@ -1,6 +1,14 @@
 # qoiuy.github.io
 
-##	[Use By jekyll](http://jekyll.bootcss.com)
+###	[Use By jekyll](http://jekyll.bootcss.com)
 
 
-##	[Write By Haroopad](https://github.com/rhiokim/haroopad/)
+###	[Write By Typora](https://typora.io/)
+
+###  markdown save Local Host
+
+### html for publish
+
+### pic save for aliyun oss
+
+### and so on
