@@ -1,0 +1,216 @@
+---
+layout: post
+title: 折腾-jeklly-博客
+subtitle: 
+date:  2019-08-13 02:59
+header-img:  img/in-post/2019-08-12-tossing-jetty-and-blog.jpg
+---
+
+<h1 id="折腾-jekyll-博客">折腾 jekyll &amp; 博客</h1>
+<p>上篇文章已经说到 我把新的内容放在了GitHub.io上面之后 不现实之前的文件了。</p>
+<p>这里记录一下 我学习，安装，使用 jekyll，并更换主题的过程的过程。</p>
+<h3 id="x00-前奏-为啥是jekyll呢">0x00 前奏 为啥是jekyll呢？</h3>
+<p>如果是一个懂行的人 随便🐶一下</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190807193214221.png" alt="" /><figcaption>image-20190807193214221</figcaption>
+</figure>
+<p>就知道。 github.io是支持静态网页的 而不是各种各样的软件啥的。例如<a href="https://zhuanlan.zhihu.com/p/38480155">这个</a> 就展示了非框架的web项目。</p>
+<p>但是我为啥要用jekyll呢？</p>
+<ol type="1">
+<li>我是写后端的，不会画前端页面（不要说我三年工作经验 什么的，爱咋咋地，就是不会画）</li>
+<li>我相中的一个挺漂亮的<a href="http://huangxuan.me/">博客主题</a>是使用jekyll的</li>
+<li>凑巧了 我<a href="准确来说差不到20天%20以后写文章就不纠结这个了。爱咋咋地，就是三年">三年前</a> 就用的jekyll写的 链接还在 还能打开</li>
+</ol>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190807193018087.png" alt="" /><figcaption>image-20190807193018087</figcaption>
+</figure>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190807193842694.png" alt="" /><figcaption>image-20190807193842694</figcaption>
+</figure>
+<h3 id="x01-安装jekyll">0x01 安装jekyll</h3>
+<p><a href="http://可能好的软件%20官网设计的都牛b吧。">我也不知道咋找到这个链接的</a>，反正 这个链接后面有安装教程</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190807194146342.png" alt="" /><figcaption>image-20190807194146342</figcaption>
+</figure>
+<p>也不知道咋了 看见了有官方源码 顺手star + clone</p>
+<h4 id="第一步-安装-brew使用mac如果连这个都不知道-请左上角点击关闭">第一步 安装 brew。使用mac如果连这个都不知道 请左上角点击关闭</h4>
+<h4 id="第二步-安装更新ruby">第二步 安装/更新ruby</h4>
+<p>我的ruby版本有点低 升级一下 如果你有mac更新ruby的需求 点<a href="https://blog.csdn.net/spring21st/article/details/52893037">这个</a></p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190807200058106.png" alt="" /><figcaption>image-20190807200058106</figcaption>
+</figure>
+<h4 id="第三步-安装rbenv管理ruby-对于我来说是没有必要的-我就忽略了">第三步 安装rbenv管理ruby 对于我来说是没有必要的 我就忽略了</h4>
+<h4 id="第四步-安装jekyll-大概下面这些">第四步 安装Jekyll 大概下面这些</h4>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190807200951476.png" alt="" /><figcaption>image-20190807200951476</figcaption>
+</figure>
+<h4 id="第五步-运行-不要问我为啥直接就运行好的软件-就是这么自信">第五步 运行 （不要问我为啥直接就运行，好的软件 就是这么自信）</h4>
+<p>哦，看我嘴形。😯。好像真的不行。回头看官网</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190807201337980.png" alt="" /><figcaption>image-20190807201337980</figcaption>
+</figure>
+<p>看着挺乱的对吧 其实换个形式看，估计你就懂了</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190807202608449.png" alt="" /><figcaption>image-20190807202608449</figcaption>
+</figure>
+<h3 id="x02-本地运行">0x02 本地运行</h3>
+<p>Jekyll 已经安装成功了 该干嘛来着。哦 在本地 启动我的项目</p>
+<h4 id="解决cannot-load-such-file-xxxx">解决cannot load such file — XXXX</h4>
+<p>启动的时候可能报 cannot load such file — XXXX 使用 gem install就好了啊</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190807204656860.png" alt="" /><figcaption>image-20190807204656860</figcaption>
+</figure>
+<p>看 启动成功了吧 我去访问下</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190807205023751.png" alt="" /><figcaption>image-20190807205023751</figcaption>
+</figure>
+<h5 id="插曲">插曲</h5>
+<p>鉴于程序员的谨慎 多点击两下</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190807205115995.png" alt="" /><figcaption>image-20190807205115995</figcaption>
+</figure>
+<p>不兼容的字符编码</p>
+<p>什么鬼</p>
+<p>去找一下查看字符编码的命令一会管这个问题。</p>
+<h3 id="x03-更换主题">0x03 更换主题</h3>
+<h4 id="删除原有模板">删除原有模板</h4>
+<p>首先 我会删除掉我的全部模板数据 只留_posts文件和image。</p>
+<p>image回头我还有传到我的oss上。</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190807214440539.png" alt="" /><figcaption>image-20190807214440539</figcaption>
+</figure>
+<h4 id="然后就是下载主题了">然后就是下载主题了。</h4>
+<p>下载一个叫做Huxpro的主题 <a href="https://github.com/Huxpro/huxblog-boilerplate">链接</a></p>
+<pre class="shell"><code># 下载主题
+git clone git@github.com:Huxpro/huxblog-boilerplate.git
+
+#拷贝主题到我的项目中
+
+ls | grep -v README.md | grep -v _config.yml | grep -v _post | grep -v images | xargs -I @ cp -rf @ ../博客
+</code></pre>
+<h4 id="不能使用哎-我将原作者-config复制到我的项目中-启动-能启动了">不能使用哎 我将原作者 config复制到我的项目中 启动 能启动了。</h4>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190809152022941.png" alt="" /><figcaption>image-20190809152022941</figcaption>
+</figure>
+<h4 id="解决404报错">解决404报错</h4>
+<p>小小测试了一下 果然汉字的原因 ，只要文章标题是汉字 就不能运行 和文件是什么格式无关。</p>
+<p>报错的时候服务器端是这样子显示的,看样子问题的原因就是filename中文导致无法运行了呗。</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190810214223113.png" alt="" /><figcaption>image-20190810214223113</figcaption>
+</figure>
+<p>别人的没问题，我的有问题，要么就是这个gem插件有问题，要么就是我哪里设置的不对。</p>
+<p>两个方向解决这个问题，一，这个文件是什么插件，插件是否能不再使用，二 解决这个插件报错的问题</p>
+<p>顺着第二个思路先来，网上有大佬 <a href="http://xiewenwei.github.io/blog/2013/01/03/update-ruby-1-8-to-1-9/">介绍这个工具</a></p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190810214537608.png" alt="" /><figcaption>image-20190810214537608</figcaption>
+</figure>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190810214801952.png" alt="" /><figcaption>image-20190810214801952</figcaption>
+</figure>
+<p>发现没什么用，重新仔细阅读大佬文章。反正说在 项目目录下，项目目录下指的应该是报错的目录吧。然后重新执行 发现这个工具无效</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190810220350183.png" alt="" /><figcaption>image-20190810220350183</figcaption>
+</figure>
+<p>换个思路 🐶🐶搜索的时候。报错 前面添加jekyll</p>
+<p>似乎也没有什么好的解决方案</p>
+<p>我又去原作者哪里看了一下。人家所有md文件都是英文的。</p>
+<p>在每一篇博客前面会有一段文字用来修饰当前文章。</p>
+<p>这样的话 我就有两个思路了。。一，看看其他人的github.io中的markdown文件，有没有带中文的，他们是怎样解决的。，二 因为我要做markdown导出成html到我的githb上。我的markdown源码文件不做任何上传到个 github的操作。所以我要看一下他的是如何运行的。</p>
+<p>针对后面的这个需求 我先去官方看一下 ，<a href="https://jekyllcn.com/docs/variables/">上面</a>是这样描述的， 包含YAML头信息的文件</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190810222506445.png" alt="" /><figcaption>image-20190810222506445</figcaption>
+</figure>
+<p>那什么是YAML呢？<a href="https://zh.wikipedia.org/wiki/YAML">维基百科</a>上是这样说的 序列化格式</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190810222931410.png" alt="" /><figcaption>image-20190810222931410</figcaption>
+</figure>
+<p>嗯。处理方案很简单 <strong>注意</strong> 这里只针对html博客内容。不针对markdown文件 markdown文件直接就能添加</p>
+<p>在我的html前方添加</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190810225005724.png" alt="" /><figcaption>image-20190810225005724</figcaption>
+</figure>
+<p>就能解决了。</p>
+<h4 id="修改config配置">修改config配置</h4>
+<p>config配置的修改就很大量了</p>
+<h5 id="更换真个博客的背景图">1.更换真个博客的背景图 。</h5>
+<p>左侧的背景是之前的 ，右侧的是我修改了之后的背景图。嗯 似乎没有人家之前的好看。但在右侧的图是我自己找的。</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190810232747531.png" alt="" /><figcaption>image-20190810232747531</figcaption>
+</figure>
+<h5 id="修改底部栏">2.修改底部栏</h5>
+<p>将作者原来的小心思抹掉 包括作者在内 大家会心一笑即可</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190810233315953.png" alt="" /><figcaption>image-20190810233315953</figcaption>
+</figure>
+<h5 id="修改config">3.修改config</h5>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: center;">修改 内容</th>
+<th style="text-align: center;">正则</th>
+<th style="text-align: center;">页面效果</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">标题</td>
+<td style="text-align: center;">^title</td>
+<td style="text-align: center;"><img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190810234105506.png" alt="image-20190810234105506" /></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">首页描述</td>
+<td style="text-align: center;">^description</td>
+<td style="text-align: center;"><img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190810234302638.png" alt="image-20190810234302638" /></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">个人签名</td>
+<td style="text-align: center;">^sidebar-about-description</td>
+<td style="text-align: center;"><img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190810234549879.png" alt="image-20190810234549879" /></td>
+</tr>
+</tbody>
+</table>
+<h5 id="更换头像">4.更换头像</h5>
+<p>我就直接把原来的头像删除 换成了自己找的一个了。</p>
+<h3 id="x04-更换图片链接">0x04 更换图片链接</h3>
+<p>是这样的，由于我的背景图片使用的高清的图（一张10M左右）使用github来存储图片真的太伤心</p>
+<p>于是我将我的图片上传值我的oss，虽说还没有设置我自己的域名呢。但是访问是没有任何问题的 如下图</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190812113500814.png" alt="" /><figcaption>image-20190812113500814</figcaption>
+</figure>
+<p>然后我将我的博客背景图片链接小小修改了一下，预览一下如图</p>
+<p><img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190812113650700.png" /></p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190812113836155.png" alt="" /><figcaption>image-20190812113836155</figcaption>
+</figure>
+<p>如何处理呢？</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190812114923018.png" alt="" /><figcaption>image-20190812114923018</figcaption>
+</figure>
+<p>去config中修改baseurl</p>
+<pre class="shell"><code># 生成修改命令
+
+grep -rn &quot;.*baseurl.*img.*&quot; . | awk &#39;{print $1}&#39; | grep -v &quot;&lt;\!--&quot; | sed &quot;s/:/ /g&quot;  | awk &#39;{print &quot;sed -i \&quot;\&quot;
+\&quot;&quot;$2&quot;s/baseurl/picurl/g\&quot; &quot;$1}&#39;
+
+# 执行生成好的命令就行啦
+</code></pre>
+<p>然后。原项目中有一些bug造成的图片路径错误需要手动修改</p>
+<pre class="html "><code>_layouts/page.html 106L:
+ 修改为：&lt;img src=&quot;{{ site.picurl }}{{site.sidebar-avatar}}&quot; / &lt;img src=&quot;{{ site.picurl }}{{site.sidebar-avatar}}&quot; /&gt;
+ 
+_layouts/default.html 14L
+修改为 &lt;img src=&quot;{{ site.picurl }}/img/icon_wechat.png&quot; width=&quot;0&quot; height=&quot;0&quot; /&gt;
+</code></pre>
+<p>修改结束之后就像下面这个样子,预览 查看没问题 推送到github</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190812131115075.png" alt="" /><figcaption>image-20190812131115075</figcaption>
+</figure>
+<p>原理很简单。 config中有一个baseurl 各个html中使用{{site.baseurl}}调用</p>
+<h3 id="x05-解决oss-设置了防盗链之后在本地预览问题">0x05 解决oss 设置了防盗链之后在本地预览问题</h3>
+<p>修改host 127.0.0.1 develop.qoiuy.com</p>
+<p>然后将oss文件跨域设置 添加*develop.qoiuy.com</p>
+<p>当然 如果你在oss哪里设置了*qoiuy.com 就不需要设置 *develop.qoiuy.com</p>
+<p>启动jeklly时。使用http://develop.qoiuy.com:4000/打开就好了</p>
+<h3 id="结束语">结束语</h3>
+<p>吐槽 背景图能不能做成滚动的。我现在的这个背景被切的好丑 两种解决方案 1.gif 2.找个js或者css</p>
+<p>文件导出 的话 我专门再写一篇吧。放在这里感觉有点墨迹了。</p>
