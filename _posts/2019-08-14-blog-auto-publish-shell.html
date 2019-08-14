@@ -1,0 +1,83 @@
+---
+layout: post
+title: 博客自动发布脚本开发记录
+subtitle: 。。。本来想多写点的，奈何没有下载starUML 没有部署图 ，写出来的东西也很乱，回头再说吧
+date:  2019-08-14 11:20
+header-img:  img/in-post/blog-auto-publish-shell.jpg
+---
+
+<h1 id="博客-自动发布脚本-开发记录">博客 自动发布脚本 开发记录</h1>
+<h3 id="x00-背景">0x00 背景</h3>
+<p>markdown编写工具 typora 。</p>
+<p>md文件 存储(使用icloud自动备份 放丢失)：/Users/lilac/Documents/Typroa/md</p>
+<p>md图片 存储(使用icloud自动备份 放丢失)：/Users/lilac/Documents/Typroa/img</p>
+<p>阿里云单独建立一个oss。买了2年的40G资源包 看情况是否做cdn加速</p>
+<p>域名：qoiuy.com 备案进行中</p>
+<p>博客图片域名 bimg.qoiuy.com + ssl</p>
+<p>博客域名 www.qoiuy.com + ssl</p>
+<p>我的markdown文件是不往github上传的。</p>
+<h3 id="x01-设计">0x01 设计</h3>
+<p>我就不把纸上画的一半思路/内容放上来了。直接画流程图 下面这个就是我的第一次的解决方案了</p>
+<pre class="mermaid"><code>
+graph TD
+
+A(主流程  编写markdown) --&gt; |预览|B(主流程 bs命令预览)
+B --&gt; C(主流程 bp命令发布文章)
+B --&gt; C2(将刚刚编写的文章转换成html )
+C2 --&gt; C3[然后放到 我的blog项目中]
+C3 --&gt; C4[ 启动jeklly服务 ]
+C4 --&gt; C5[使用浏览器打开127.0.0.1:4000]
+B --&gt; |返回修改f|A
+C --&gt; F(把刚刚预览过的文件 使用git push到github)
+F --&gt; F1( 将图片转成阿里云oss文件 )
+
+A --&gt; B2(其他需求)
+B2 --&gt; B1(1.艾特 用来匹配标示一篇文章的YAML)
+B1 --&gt; C1[2.使用dash 片段进行插入操作]
+
+B --&gt; D[其他需求]
+D --&gt; C6[1.后台操作]
+C6 --&gt; D1[2.支持指定文件操作]
+
+C --&gt;E[其他需求]
+E --&gt; E1[1.后台运行]
+E1 --&gt; E2[2.指定文件发布]
+E2 --&gt; E3[3.获取 待发布列表 blog项目中的 ]
+E3 --&gt; E4[4.使用数字可以指定发布文章 ]
+E4 --&gt; E5[5.后期会支持取消发布吧 ]</code></pre>
+<p>然后我使用mindnode再一次细化这个大纲做好GTD，一步步执行之后写了俩脚本 一个bs 一个bp</p>
+<p>blog一共是有三个状态的</p>
+<ul>
+<li>编辑状态 文件以 markdown形式 存储在typora md文件夹内，图片存储在typora img文件夹内</li>
+<li>预览状态 文件以 html 形式存储在blog的文件夹内， 图片存储在oss上。</li>
+<li>发布状态 文件以 html形式存储在github上，图片存储在oss上。</li>
+</ul>
+<p>blog的两种形式</p>
+<ul>
+<li><p>markdown形式的文件 包含 自定义YAML （dash片段自动生成）内容，图片，背景图</p></li>
+<li><p>blog的html形式 包含 标准YAML 内容 图片 背景图</p></li>
+</ul>
+<h3 id="x02-发布脚本">0x02 发布脚本</h3>
+<p>为了排除粘代码 凑文字的嫌疑 我把我的脚本截图了。 <img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190814104126787.png" alt="image-20190814104024544" /></p>
+<p>脚本分为几个部分 从108行之后是核心代码 前面只是一些设置。</p>
+<p>1.check一下文件路径</p>
+<p>2.从markdown文件中提取我定义的YAML数据</p>
+<p>3.将md文件转换成html</p>
+<p>4.将文件中图片转到oss中</p>
+<p>5.对html 进行处理 ，包括处理YAML 替换图片路径</p>
+<p>6.启动jekyll</p>
+<p>7.预览</p>
+<h3 id="x03-发布到github的脚本">0x03 发布到github的脚本</h3>
+<p>很不走心的脚本</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190814111815211.png" alt="" /><figcaption>image-20190814111815211</figcaption>
+</figure>
+<h3 id="x04-后记">0x04 后记</h3>
+<ul>
+<li>Sed 各种规则费的时间最多</li>
+<li>oss 之前就弄过，想配置的话直接去阿里云下载一个命令行工具，看一看很简单的</li>
+<li>Pandoc实现的时候浪费了点时间，因为第一想法是 使用typora自带的md-html工具转换。没找到，退而求其次选择的pandoc，测试的时候还发现样式没了,后来发现因为我忘记YAML了</li>
+<li>google浏览器打开文件是我之前就弄过的</li>
+<li>Jekyll 守护进程启动使用🐶搜索就出结果了，意外之喜是log中提供了pkill命令 很开心</li>
+</ul>
+<p>time</p>
