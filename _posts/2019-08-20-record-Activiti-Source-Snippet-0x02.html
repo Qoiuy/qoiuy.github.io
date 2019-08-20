@@ -1,0 +1,392 @@
+---
+layout: post
+title: Activiti源码随手记录 Configuration
+subtitle: 需要一直更新的一篇文章
+date:  2019-08-20 09:26
+header-img:  img/in-post/record-Activiti-Source-Snippet-0x02.jpg
+---
+
+<h1 id="record-activiti-source-snippet-0x02">Record Activiti Source Snippet 0x02</h1>
+<p>ps：这篇文章有两个选择，1.边修改边重新发布。2只发一版最牛b，最炫酷的。选前者</p>
+<h3 id="impl.cfg">impl.cfg</h3>
+<h3 id="processengineconfiguration">ProcessEngineConfiguration</h3>
+<p>最有名的ProcessEngineConfiguration的子类了。都上了<a href="https://www.activiti.org/userguide/#configuration">userguide</a>了。介绍从<a href="https://doc.yonyoucloud.com/doc/activiti-5.x-user-guide/Chapter%203.%20Configuration%20%E9%85%8D%E7%BD%AE/ProcessEngineConfiguration%20bean.html">5.x翻译</a> 复制过来的。</p>
+<p>可以说是最核心的一个类了，整个启动activiti的过程都在这里。有一个很有意思的事。大多数的init方法都是以if(null)作为判断。这样就表示，用户端可以实现大量的自定义行为。</p>
+<p>activiti将整个的工作流成拆分成近50个模块。大部分模块都支持自定义行为。磕头膜拜，学习</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190819122708273.png" alt="" /><figcaption>image-20190819122708273</figcaption>
+</figure>
+<p>多说一句 因为我不用spring 所以不读spring相关的代码。</p>
+<p>下面是EngineConfiguration子类之间的类图。</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/JtaProcessEngineConfiguration.png" alt="" /><figcaption>JtaProcessEngineConfiguration</figcaption>
+</figure>
+<p>白话文翻译 - 常规使用StandaloneProcessEngineConfiguration</p>
+<ul>
+<li><p>测试使用StandaloneInMemProcessEngineConfiguration</p></li>
+<li><p>JTA(Java Transaction API 分布式事务)需求使用JtaProcessEngineConfiguration</p></li>
+<li><p>多租户使用 MultiSchemaMultiTenantProcessEngineConfiguration</p></li>
+</ul>
+<p>其实主要逻辑都在ProcessEngineConfiguration和ProcessEngineConfigurationImpl中。看他们的fileds就知道了。</p>
+<p>多了一个MultiSchemaMultiTenantProcessEngineConfiguration没有在userguide中介绍。源码中是这样注释的 <img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190819123304252.png" alt="image-20190819123304252" /> 我参考了有道翻译的结果</p>
+<ul>
+<li><p>ProcessEngineConfiguration 构建了一个多租户ProcessEngine，其中每个租户都有自己的数据库模式。</p></li>
+<li><p>如果需要多租户且不需要数据隔离:Activiti的默认ProcessEngineConfigurationImpl是通过在DeploymentBuilder上设置租户标识符启用多租户的。</p></li>
+<li><h4 id="该配置具有以下特征">该配置具有以下特征:</h4>
+<ul>
+<li>它需要一个TenantInfoHolder来确定哪个租户当前是“活动的”。即为租户执行特定的API调用。</li>
+<li>默认情况下使用StrongUuidGenerator。“常规”DbIdGenerator不能与此配置一起使用。</li>
+<li>使用registerTenant(String, DataSource)操作添加承租者(也在引导之后)。</li>
+<li>目前，该配置不与“旧的”JobExecutor一起工作，但只与较新的AsyncExecutor一起工作。有两种不同的实现:
+<ul>
+<li>ExecutorPerTenantAsyncExecutor:为每个租户创建一个完整的AsyncExecutor。</li>
+<li>SharedExecutorServiceAsyncExecutor:为每个租户创建获取线程，但作业执行是使用流程引擎共享ExecutorService完成的。</li>
+<li>AsyncExecutor需要使用该类上的setAsyncExecutor(AsyncExecutor)方法注入。</li>
+</ul></li>
+</ul></li>
+</ul>
+<h5 id="init">init()</h5>
+<p>虽然已经截图了。但还是忍不住粘代码</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb1-1"><a href="#cb1-1"></a><span class="co">// init</span></span>
+<span id="cb1-2"><a href="#cb1-2"></a><span class="co">// /////////////////////////////////////////////////////////////////////</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a></span>
+<span id="cb1-4"><a href="#cb1-4"></a><span class="kw">public</span> <span class="dt">void</span> <span class="fu">init</span>() {</span>
+<span id="cb1-5"><a href="#cb1-5"></a>  <span class="fu">initConfigurators</span>(); <span class="co">//初始化配置器 =&gt;获取到全部的config并封装在allConfigurators里</span></span>
+<span id="cb1-6"><a href="#cb1-6"></a>  <span class="fu">configuratorsBeforeInit</span>();<span class="co">//配置器之前初始化</span></span>
+<span id="cb1-7"><a href="#cb1-7"></a>  <span class="fu">initProcessDiagramGenerator</span>();<span class="co">//流程 图 生成器</span></span>
+<span id="cb1-8"><a href="#cb1-8"></a>  <span class="fu">initHistoryLevel</span>(); <span class="co">//初始化 History 等级 见HistoryLevel类</span></span>
+<span id="cb1-9"><a href="#cb1-9"></a>  <span class="fu">initExpressionManager</span>();<span class="co">//初始化表达式管理器</span></span>
+<span id="cb1-10"><a href="#cb1-10"></a></span>
+<span id="cb1-11"><a href="#cb1-11"></a>  <span class="kw">if</span> (usingRelationalDatabase) { <span class="co">//如果使用关系型数据库</span></span>
+<span id="cb1-12"><a href="#cb1-12"></a>    <span class="fu">initDataSource</span>(); <span class="co">//初始化数据源</span></span>
+<span id="cb1-13"><a href="#cb1-13"></a>  }</span>
+<span id="cb1-14"><a href="#cb1-14"></a></span>
+<span id="cb1-15"><a href="#cb1-15"></a>  <span class="fu">initAgendaFactory</span>(); <span class="co">//初始化Agenda工厂</span></span>
+<span id="cb1-16"><a href="#cb1-16"></a>  <span class="fu">initHelpers</span>(); <span class="co">//初始化Helpers</span></span>
+<span id="cb1-17"><a href="#cb1-17"></a>  <span class="fu">initVariableTypes</span>(); <span class="co">//初始化变量类型</span></span>
+<span id="cb1-18"><a href="#cb1-18"></a>  <span class="fu">initBeans</span>(); <span class="co">//初始化 beans</span></span>
+<span id="cb1-19"><a href="#cb1-19"></a>  <span class="fu">initFormEngines</span>();<span class="co">//初始化form引擎</span></span>
+<span id="cb1-20"><a href="#cb1-20"></a>  <span class="fu">initFormTypes</span>();<span class="co">//初始化form</span></span>
+<span id="cb1-21"><a href="#cb1-21"></a>  <span class="fu">initScriptingEngines</span>();<span class="co">//初始化脚本引擎</span></span>
+<span id="cb1-22"><a href="#cb1-22"></a>  <span class="fu">initClock</span>();<span class="co">//初始化时钟</span></span>
+<span id="cb1-23"><a href="#cb1-23"></a>  <span class="fu">initBusinessCalendarManager</span>();<span class="co">//初始化业务日程管理器</span></span>
+<span id="cb1-24"><a href="#cb1-24"></a>  <span class="fu">initCommandContextFactory</span>();<span class="co">//初始化 命令 上下文工厂</span></span>
+<span id="cb1-25"><a href="#cb1-25"></a>  <span class="fu">initTransactionContextFactory</span>();<span class="co">//初始化 事务上下文工厂</span></span>
+<span id="cb1-26"><a href="#cb1-26"></a>  <span class="fu">initCommandExecutors</span>();<span class="co">//初始化命令执行器</span></span>
+<span id="cb1-27"><a href="#cb1-27"></a>  <span class="fu">initServices</span>();<span class="co">//初始化服务</span></span>
+<span id="cb1-28"><a href="#cb1-28"></a>  <span class="fu">initIdGenerator</span>();<span class="co">//初始化id生成器</span></span>
+<span id="cb1-29"><a href="#cb1-29"></a>  <span class="fu">initBehaviorFactory</span>();<span class="co">//初始化行为工厂</span></span>
+<span id="cb1-30"><a href="#cb1-30"></a>  <span class="fu">initListenerFactory</span>(); <span class="co">//初始化监听器工厂</span></span>
+<span id="cb1-31"><a href="#cb1-31"></a>  <span class="fu">initBpmnParser</span>();<span class="co">//初始化bpmn解析器</span></span>
+<span id="cb1-32"><a href="#cb1-32"></a>  <span class="fu">initProcessDefinitionCache</span>();<span class="co">//初始化流程定义cache</span></span>
+<span id="cb1-33"><a href="#cb1-33"></a>  <span class="fu">initProcessDefinitionInfoCache</span>();<span class="co">//初始化流程定义信息cache</span></span>
+<span id="cb1-34"><a href="#cb1-34"></a>  <span class="fu">initKnowledgeBaseCache</span>(); <span class="co">//初始化知识库cache</span></span>
+<span id="cb1-35"><a href="#cb1-35"></a>  <span class="fu">initJobHandlers</span>();<span class="co">//初始化job处理器</span></span>
+<span id="cb1-36"><a href="#cb1-36"></a>  <span class="fu">initJobManager</span>();<span class="co">//初始化job管理器</span></span>
+<span id="cb1-37"><a href="#cb1-37"></a>  <span class="fu">initAsyncExecutor</span>();<span class="co">//初始化异步执行程序</span></span>
+<span id="cb1-38"><a href="#cb1-38"></a></span>
+<span id="cb1-39"><a href="#cb1-39"></a>  <span class="fu">initTransactionFactory</span>();<span class="co">//初始化 事务工厂</span></span>
+<span id="cb1-40"><a href="#cb1-40"></a></span>
+<span id="cb1-41"><a href="#cb1-41"></a>  <span class="kw">if</span> (usingRelationalDatabase) {</span>
+<span id="cb1-42"><a href="#cb1-42"></a>    <span class="fu">initSqlSessionFactory</span>();<span class="co">//初始化sql会话工厂</span></span>
+<span id="cb1-43"><a href="#cb1-43"></a>  }</span>
+<span id="cb1-44"><a href="#cb1-44"></a></span>
+<span id="cb1-45"><a href="#cb1-45"></a>  <span class="fu">initSessionFactories</span>(); <span class="co">//初始化会话工厂</span></span>
+<span id="cb1-46"><a href="#cb1-46"></a>  <span class="fu">initDataManagers</span>(); <span class="co">//初始化数据管理器</span></span>
+<span id="cb1-47"><a href="#cb1-47"></a>  <span class="fu">initEntityManagers</span>(); <span class="co">//初始化 实体管理器</span></span>
+<span id="cb1-48"><a href="#cb1-48"></a>  <span class="fu">initHistoryManager</span>(); <span class="co">//初始化 历史管理器</span></span>
+<span id="cb1-49"><a href="#cb1-49"></a>  <span class="fu">initJpa</span>();<span class="co">//初始化jpa</span></span>
+<span id="cb1-50"><a href="#cb1-50"></a>  <span class="fu">initDeployers</span>();<span class="co">//初始化 部署者</span></span>
+<span id="cb1-51"><a href="#cb1-51"></a>  <span class="fu">initDelegateInterceptor</span>();<span class="co">//初始化委托拦截器</span></span>
+<span id="cb1-52"><a href="#cb1-52"></a>  <span class="fu">initEventHandlers</span>();<span class="co">//初始化事件管理器</span></span>
+<span id="cb1-53"><a href="#cb1-53"></a>  <span class="fu">initFailedJobCommandFactory</span>(); <span class="co">//初始化故障job 命令工厂</span></span>
+<span id="cb1-54"><a href="#cb1-54"></a>  <span class="fu">initEventDispatcher</span>();<span class="co">//初始化事件调度器</span></span>
+<span id="cb1-55"><a href="#cb1-55"></a>  <span class="fu">initProcessValidator</span>();<span class="co">//初始化过程验证器</span></span>
+<span id="cb1-56"><a href="#cb1-56"></a>  <span class="fu">initDatabaseEventLogging</span>(); <span class="co">//初始化数据库事件日志记录</span></span>
+<span id="cb1-57"><a href="#cb1-57"></a>  <span class="fu">initActiviti5CompatibilityHandler</span>();<span class="co">//初始化Activiti5处理程序的兼容性</span></span>
+<span id="cb1-58"><a href="#cb1-58"></a>  <span class="fu">configuratorsAfterInit</span>();<span class="co">//配置器初始化后</span></span>
+<span id="cb1-59"><a href="#cb1-59"></a>}</span></code></pre></div>
+<p>这个重要的方法 忍不住和5.0对比一下 。数据源部分，新增behavior,bomnparser等</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190820105847196.png" alt="" /><figcaption>image-20190820105847196</figcaption>
+</figure>
+<p>又忍不住和7.0对比。7.0删除了该文件，删除了该文，删除了该，删除了。删除。删。删…</p>
+<h5 id="initconfigurators-获取到全部的config">initConfigurators() 获取到全部的config</h5>
+<div class="sourceCode" id="cb2"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb2-1"><a href="#cb2-1"></a>  <span class="co">// 246L</span></span>
+<span id="cb2-2"><a href="#cb2-2"></a>  </span>
+<span id="cb2-3"><a href="#cb2-3"></a>  <span class="kw">protected</span> <span class="dt">boolean</span> enableConfiguratorServiceLoader = <span class="kw">true</span>; <span class="co">// Enabled by default. In certain environments this should be set to false (eg osgi) 默认启用。在某些环境中，这应该设置为false(如osgi)</span></span>
+<span id="cb2-4"><a href="#cb2-4"></a>  <span class="kw">protected</span> <span class="bu">List</span>&lt;ProcessEngineConfigurator&gt; configurators; <span class="co">// The injected configurators 注入的配置器</span></span>
+<span id="cb2-5"><a href="#cb2-5"></a>  <span class="kw">protected</span> <span class="bu">List</span>&lt;ProcessEngineConfigurator&gt; allConfigurators; <span class="co">// Including auto-discovered configurators 包括配置器这里用处不大</span></span>
+<span id="cb2-6"><a href="#cb2-6"></a>  </span>
+<span id="cb2-7"><a href="#cb2-7"></a>  <span class="co">//1357L 伪代码</span></span>
+<span id="cb2-8"><a href="#cb2-8"></a>  <span class="kw">public</span> <span class="dt">void</span> <span class="fu">initConfigurators</span>() {</span>
+<span id="cb2-9"><a href="#cb2-9"></a>  </span>
+<span id="cb2-10"><a href="#cb2-10"></a>      allConfigurators = <span class="kw">new</span> <span class="bu">ArrayList</span>&lt;ProcessEngineConfigurator&gt;();</span>
+<span id="cb2-11"><a href="#cb2-11"></a>  </span>
+<span id="cb2-12"><a href="#cb2-12"></a>      <span class="co">// Configurators that are explicitly added to the config 显式添加到配置中的配置器</span></span>
+<span id="cb2-13"><a href="#cb2-13"></a>      configurators.<span class="fu">forEach</span>(config -&gt; allConfigurators.<span class="fu">add</span>(config));</span>
+<span id="cb2-14"><a href="#cb2-14"></a>    </span>
+<span id="cb2-15"><a href="#cb2-15"></a>      <span class="co">// Auto discovery through ServiceLoader 通过ServiceLoader自动发现</span></span>
+<span id="cb2-16"><a href="#cb2-16"></a>      <span class="kw">if</span> (enableConfiguratorServiceLoader) {</span>
+<span id="cb2-17"><a href="#cb2-17"></a>  </span>
+<span id="cb2-18"><a href="#cb2-18"></a>        <span class="co">//获取到classLoader</span></span>
+<span id="cb2-19"><a href="#cb2-19"></a>        <span class="bu">ClassLoader</span> classLoader = <span class="fu">getClassLoader</span>() == <span class="kw">null</span> ? ReflectUtil.<span class="fu">getClassLoader</span>() : <span class="fu">getClassLoader</span>();</span>
+<span id="cb2-20"><a href="#cb2-20"></a>        </span>
+<span id="cb2-21"><a href="#cb2-21"></a>        <span class="co">//使用ServiceLoader加载classLoader 获取</span></span>
+<span id="cb2-22"><a href="#cb2-22"></a>        <span class="bu">ServiceLoader</span>&lt;ProcessEngineConfigurator&gt; configuratorServiceLoader = <span class="bu">ServiceLoader</span>.<span class="fu">load</span>(ProcessEngineConfigurator.<span class="fu">class</span>, classLoader);</span>
+<span id="cb2-23"><a href="#cb2-23"></a>        </span>
+<span id="cb2-24"><a href="#cb2-24"></a>        configuratorServiceLoader.<span class="fu">forEach</span>(config -&gt; allConfigurators.<span class="fu">add</span>(config))</span>
+<span id="cb2-25"><a href="#cb2-25"></a>  </span>
+<span id="cb2-26"><a href="#cb2-26"></a>        <span class="kw">if</span> (!allConfigurators.<span class="fu">isEmpty</span>()) {</span>
+<span id="cb2-27"><a href="#cb2-27"></a>  </span>
+<span id="cb2-28"><a href="#cb2-28"></a>          <span class="co">// Order them according to the priorities (useful for dependent</span></span>
+<span id="cb2-29"><a href="#cb2-29"></a>          <span class="co">// configurator) 根据优先级对它们排序(对依赖配置器有用)</span></span>
+<span id="cb2-30"><a href="#cb2-30"></a>          <span class="bu">Collections</span>.<span class="fu">sort</span>(allConfigurators)</span>
+<span id="cb2-31"><a href="#cb2-31"></a>  </span>
+<span id="cb2-32"><a href="#cb2-32"></a>          <span class="co">// Execute the configurators 执行配置器</span></span>
+<span id="cb2-33"><a href="#cb2-33"></a>        }</span>
+<span id="cb2-34"><a href="#cb2-34"></a>  </span>
+<span id="cb2-35"><a href="#cb2-35"></a>      }</span>
+<span id="cb2-36"><a href="#cb2-36"></a>    }</span>
+<span id="cb2-37"><a href="#cb2-37"></a>  </span></code></pre></div>
+<h5 id="configuratorsbeforeinit-执行全部config类的init方法">configuratorsBeforeInit() 执行全部config类的init方法</h5>
+<p>代码一共就4行。但是执行的却是很多行。参考了<a href="https://blog.csdn.net/mmllllmm/article/details/80641070">大佬说的</a>…作者这样设计config。想法不简单啊。值得膜拜学习</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb3-1"><a href="#cb3-1"></a><span class="co">// 遍历全部config 并执行全部config的beforeInit方法</span></span>
+<span id="cb3-2"><a href="#cb3-2"></a>allConfigurators.<span class="fu">forEach</span>(  config -&gt; config.<span class="fu">beforeInit</span>(<span class="kw">this</span>));</span></code></pre></div>
+<h5 id="initprocessdiagramgenerator-draw工作流图片">initProcessDiagramGenerator() draw工作流图片</h5>
+<p>代码一共三行。DefaultProcessDiagramGenerator并不是Engine项目中的，而是activiti-image-generator项目中的😂 而activiti-image-generator项目是将一个流程画出来的。</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb4-1"><a href="#cb4-1"></a><span class="kw">if</span> (processDiagramGenerator == <span class="kw">null</span>) {</span>
+<span id="cb4-2"><a href="#cb4-2"></a>  processDiagramGenerator = <span class="kw">new</span> <span class="fu">DefaultProcessDiagramGenerator</span>();</span>
+<span id="cb4-3"><a href="#cb4-3"></a>}</span></code></pre></div>
+<p>额。不知道啥是工作流图片的看下面这个图，如果你连下面这张图，或者类似的都没看过。你可以阅读下一篇文章了。我的这篇内容不适合你。</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190820153747697.png" alt="" /><figcaption>image-20190820153747697</figcaption>
+</figure>
+<h5 id="inithistorylevel-处理activiti的历史记录级别">initHistoryLevel() 处理activiti的历史记录级别</h5>
+<p>三行代码</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb5-1"><a href="#cb5-1"></a><span class="kw">if</span> (historyLevel == <span class="kw">null</span>) {</span>
+<span id="cb5-2"><a href="#cb5-2"></a>      historyLevel = HistoryLevel.<span class="fu">getHistoryLevelForKey</span>(<span class="fu">getHistory</span>());</span>
+<span id="cb5-3"><a href="#cb5-3"></a>}</span></code></pre></div>
+<p><a href="https://www.activiti.org/userguide/#configurationRoot">官网</a>是这样介绍historyLevel的。你可以这样理解。如果你想用activiti的history功能就选后两个，不想让activiti记录历史，那么就选上面两个，如果你原有系统中已经包含了history，真真不要用activiti的history。</p>
+<p>Following history levels can be configured:</p>
+<ul>
+<li><p><code>none</code>: skips all history archiving. This is the most performant for runtime process execution, but no historical information will be available.跳过所有历史存档。这是运行时进程执行的最佳性能，但是没有可用的历史信息。</p></li>
+<li><p><code>activity</code>: archives all process instances and activity instances. At the end of the process instance, the latest values of the top level process instance variables will be copied to historic variable instances. No details will be archived. 归档所有流程实例和活动实例。在流程实例的末尾，顶层流程实例变量的最新值将被复制到历史变量实例中。没有任何细节将被存档。</p></li>
+<li><p><code>audit</code>: This is the default. It archives all process instances, activity instances, keeps variable values continuously in sync and all form properties that are submitted so that all user interaction through forms is traceable and can be audited.这是默认值。它归档所有流程实例、活动实例、保持变量值连续同步以及提交的所有表单属性，以便通过表单进行的所有用户交互都是可跟踪的，并且可以审计。</p></li>
+<li><p><code>full</code>: This is the highest level of history archiving and hence the slowest. This level stores all information as in the <code>audit</code> level plus all other possible details, mostly this are process variable updates.这是最高级别的历史存档，因此也是最慢的。此级别存储与“审计”级别相同的所有信息以及所有其他可能的细节，主要是流程变量更新。</p></li>
+</ul>
+<h5 id="initexpressionmanager-el表达式">initExpressionManager() el表达式</h5>
+<div class="sourceCode" id="cb6"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb6-1"><a href="#cb6-1"></a><span class="kw">if</span> (expressionManager == <span class="kw">null</span>) {</span>
+<span id="cb6-2"><a href="#cb6-2"></a>  expressionManager = <span class="kw">new</span> <span class="fu">ExpressionManager</span>(beans);</span>
+<span id="cb6-3"><a href="#cb6-3"></a>}</span></code></pre></div>
+<p>点击ExpressionManager实现类的时候跳转到org.activiti.engine.impl.el了这个包。我就了解了。</p>
+<p>如果你不知道哪里用了el表达式，这个就是</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190820155625721.png" alt="" /><figcaption>image-20190820155625721</figcaption>
+</figure>
+<h5 id="initdatasource-初始化数据库连接">initDataSource() 初始化数据库连接</h5>
+<p>代码不多。支持了JNDI。支持自定义，处理了Ibatis连接close.初始化了数据看类型.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb7-1"><a href="#cb7-1"></a><span class="kw">public</span> <span class="dt">void</span> <span class="fu">initDataSource</span>() {</span>
+<span id="cb7-2"><a href="#cb7-2"></a></span>
+<span id="cb7-3"><a href="#cb7-3"></a>    <span class="kw">if</span> (dataSourceJndiName != <span class="kw">null</span>) {</span>
+<span id="cb7-4"><a href="#cb7-4"></a>        <span class="co">//JNDI</span></span>
+<span id="cb7-5"><a href="#cb7-5"></a>        dataSource = (<span class="bu">DataSource</span>) <span class="kw">new</span> <span class="bu">InitialContext</span>().<span class="fu">lookup</span>(dataSourceJndiName);</span>
+<span id="cb7-6"><a href="#cb7-6"></a>    } <span class="kw">else</span> <span class="kw">if</span> (jdbcUrl != <span class="kw">null</span>) {</span>
+<span id="cb7-7"><a href="#cb7-7"></a>        PooledDataSource pooledDataSource = <span class="kw">new</span> <span class="fu">PooledDataSource</span>(...);</span>
+<span id="cb7-8"><a href="#cb7-8"></a>        pooledDataSource.<span class="fu">set</span>...</span>
+<span id="cb7-9"><a href="#cb7-9"></a>        dataSource = pooledDataSource;</span>
+<span id="cb7-10"><a href="#cb7-10"></a>    }</span>
+<span id="cb7-11"><a href="#cb7-11"></a></span>
+<span id="cb7-12"><a href="#cb7-12"></a>    <span class="kw">if</span> (dataSource <span class="kw">instanceof</span> PooledDataSource) {</span>
+<span id="cb7-13"><a href="#cb7-13"></a>      <span class="co">// ACT-233: connection pool of Ibatis is not properly</span></span>
+<span id="cb7-14"><a href="#cb7-14"></a>      <span class="co">// initialized if this is not called!如果没有调用Ibatis连接池，则未正确初始化它!</span></span>
+<span id="cb7-15"><a href="#cb7-15"></a>      ((PooledDataSource) dataSource).<span class="fu">forceCloseAll</span>();</span>
+<span id="cb7-16"><a href="#cb7-16"></a>    }</span>
+<span id="cb7-17"><a href="#cb7-17"></a>  }</span>
+<span id="cb7-18"><a href="#cb7-18"></a></span>
+<span id="cb7-19"><a href="#cb7-19"></a>  <span class="kw">if</span> (databaseType == <span class="kw">null</span>) {</span>
+<span id="cb7-20"><a href="#cb7-20"></a>    <span class="fu">initDatabaseType</span>();</span>
+<span id="cb7-21"><a href="#cb7-21"></a>  }</span>
+<span id="cb7-22"><a href="#cb7-22"></a>}</span></code></pre></div>
+<p>我在这里遇到过一个bug。我们启动activiti之后 不久数据库连接就被打满了。尴尬。可能就是因为这里没有被释放掉的原因吧。再说再说。</p>
+<h5 id="initagendafactory-没看懂">initAgendaFactory() …没看懂</h5>
+<p>说实话 ，我一直好像没有用过Agenda。🐶了一圈也没又啥有用的结果</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb8-1"><a href="#cb8-1"></a><span class="kw">if</span> (<span class="kw">this</span>.<span class="fu">engineAgendaFactory</span> == <span class="kw">null</span>) {</span>
+<span id="cb8-2"><a href="#cb8-2"></a>  <span class="kw">this</span>.<span class="fu">engineAgendaFactory</span> = <span class="kw">new</span> <span class="fu">DefaultActivitiEngineAgendaFactory</span>();</span>
+<span id="cb8-3"><a href="#cb8-3"></a>}</span></code></pre></div>
+<p>这样吧，看看Agenda代码中的定义</p>
+<ul>
+<li>对于正在执行的每个API调用(以及Command)，都会创建一个新Agenda实例。</li>
+<li>在这个Agenda中，将放置操作，CommandExecutor将继续执行这些操作，直到所有操作都执行完毕。</li>
+<li>在编写ActivityBehavior实现时，该议程还可以方便地访问计划新操作的方法。</li>
+<li>在命令执行期间，始终可以使用上下文#getAgenda()获取Agenda。</li>
+</ul>
+<p>还是看不懂。</p>
+<h5 id="inithelpers-辅助类">initHelpers() 辅助类</h5>
+<p>创建了processInstance和listenerNotification的辅助类</p>
+<pre><code>if (processInstanceHelper == null) {
+  processInstanceHelper = new ProcessInstanceHelper();
+}
+if (listenerNotificationHelper == null) {
+  listenerNotificationHelper = new ListenerNotificationHelper();
+}</code></pre>
+<p>为什么不是静态类呢？</p>
+<h5 id="initvariabletypes-变量类型">initVariableTypes() 变量类型</h5>
+<p>activiti封装了变量类型了，类名VariableType</p>
+<h5 id="initbeans-没看懂">initBeans() …没看懂</h5>
+<div class="sourceCode" id="cb10"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb10-1"><a href="#cb10-1"></a>beans = <span class="kw">new</span> <span class="bu">HashMap</span>&lt;<span class="bu">Object</span>, <span class="bu">Object</span>&gt;();</span></code></pre></div>
+<h5 id="initformengines-form引擎-支持客户端自定义">initFormEngines() form引擎 支持客户端自定义</h5>
+<p>form引擎应该是用来处理form流程节点的</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb11-1"><a href="#cb11-1"></a><span class="kw">if</span> (formEngines == <span class="kw">null</span>) {</span>
+<span id="cb11-2"><a href="#cb11-2"></a>  formEngines = <span class="kw">new</span> <span class="bu">HashMap</span>&lt;<span class="bu">String</span>, FormEngine&gt;();</span>
+<span id="cb11-3"><a href="#cb11-3"></a>  FormEngine defaultFormEngine = <span class="kw">new</span> <span class="fu">JuelFormEngine</span>();</span>
+<span id="cb11-4"><a href="#cb11-4"></a>  formEngines.<span class="fu">put</span>(<span class="kw">null</span>, defaultFormEngine); <span class="co">// default form engine is</span></span>
+<span id="cb11-5"><a href="#cb11-5"></a>                                            <span class="co">// looked up with null 点睛之笔 厉害了 膜拜学习</span></span>
+<span id="cb11-6"><a href="#cb11-6"></a>  formEngines.<span class="fu">put</span>(defaultFormEngine.<span class="fu">getName</span>(), defaultFormEngine);</span>
+<span id="cb11-7"><a href="#cb11-7"></a>}</span>
+<span id="cb11-8"><a href="#cb11-8"></a><span class="kw">if</span> (customFormEngines != <span class="kw">null</span>) {</span>
+<span id="cb11-9"><a href="#cb11-9"></a>  <span class="kw">for</span> (FormEngine formEngine : customFormEngines) {</span>
+<span id="cb11-10"><a href="#cb11-10"></a>    formEngines.<span class="fu">put</span>(formEngine.<span class="fu">getName</span>(), formEngine);</span>
+<span id="cb11-11"><a href="#cb11-11"></a>  }</span>
+<span id="cb11-12"><a href="#cb11-12"></a>}</span></code></pre></div>
+<h5 id="initformtypes-form类型-支持客户端自定义">initFormTypes() form类型 支持客户端自定义</h5>
+<h5 id="initscriptingengines-初始化resolver工厂和scripting引擎">initScriptingEngines() 初始化resolver工厂和scripting引擎</h5>
+<p>我没用过script，嗯</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190820174145211.png" alt="" /><figcaption>image-20190820174145211</figcaption>
+</figure>
+<h5 id="initclock-对时间的封装流程中各种定时器使用这个clock">initClock() 对时间的封装，流程中各种定时器使用这个clock</h5>
+<h5 id="initbusinesscalendarmanager-定时任务管理器">initBusinessCalendarManager() 定时任务管理器</h5>
+<h5 id="initcommandcontextfactory-命令context工厂">initCommandContextFactory() 命令Context工厂</h5>
+<h5 id="inittransactioncontextfactory-事务context工厂">initTransactionContextFactory() 事务Context工厂</h5>
+<h5 id="initcommandexecutors-核心-初始化command-命令模式中的command">initCommandExecutors() 核心 初始化command 命令模式中的command</h5>
+<div class="sourceCode" id="cb12"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb12-1"><a href="#cb12-1"></a>  <span class="fu">initDefaultCommandConfig</span>();</span>
+<span id="cb12-2"><a href="#cb12-2"></a>  <span class="fu">initSchemaCommandConfig</span>();</span>
+<span id="cb12-3"><a href="#cb12-3"></a>  <span class="fu">initCommandInvoker</span>();</span>
+<span id="cb12-4"><a href="#cb12-4"></a>  <span class="fu">initCommandInterceptors</span>();</span>
+<span id="cb12-5"><a href="#cb12-5"></a>  <span class="fu">initCommandExecutor</span>();</span></code></pre></div>
+<h5 id="initservices-核心-初始化8中service">initServices() 核心 初始化8中service</h5>
+<div class="sourceCode" id="cb13"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb13-1"><a href="#cb13-1"></a>  <span class="fu">initService</span>(repositoryService);</span>
+<span id="cb13-2"><a href="#cb13-2"></a>  <span class="fu">initService</span>(runtimeService);</span>
+<span id="cb13-3"><a href="#cb13-3"></a>  <span class="fu">initService</span>(historyService);</span>
+<span id="cb13-4"><a href="#cb13-4"></a>  <span class="fu">initService</span>(identityService);</span>
+<span id="cb13-5"><a href="#cb13-5"></a>  <span class="fu">initService</span>(taskService);</span>
+<span id="cb13-6"><a href="#cb13-6"></a>  <span class="fu">initService</span>(formService);</span>
+<span id="cb13-7"><a href="#cb13-7"></a>  <span class="fu">initService</span>(managementService);</span>
+<span id="cb13-8"><a href="#cb13-8"></a>  <span class="fu">initService</span>(dynamicBpmnService);</span>
+<span id="cb13-9"><a href="#cb13-9"></a></span>
+<span id="cb13-10"><a href="#cb13-10"></a><span class="co">//所有service执行setCommandExecutor方法</span></span>
+<span id="cb13-11"><a href="#cb13-11"></a><span class="kw">public</span> <span class="dt">void</span> <span class="fu">initService</span>(<span class="bu">Object</span> service) {</span>
+<span id="cb13-12"><a href="#cb13-12"></a>  <span class="kw">if</span> (service <span class="kw">instanceof</span> ServiceImpl) {</span>
+<span id="cb13-13"><a href="#cb13-13"></a>    ((ServiceImpl) service).<span class="fu">setCommandExecutor</span>(commandExecutor);</span>
+<span id="cb13-14"><a href="#cb13-14"></a>  }</span>
+<span id="cb13-15"><a href="#cb13-15"></a>}</span></code></pre></div>
+<h5 id="initidgenerator-初始化数据库id生成器应该是id自增相关的吧">initIdGenerator() 初始化数据库Id生成器（应该是id自增相关的吧）</h5>
+<p>后面的初始化SessionFactories部分有使用</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb14-1"><a href="#cb14-1"></a><span class="kw">if</span> (idGenerator == <span class="kw">null</span>) {</span>
+<span id="cb14-2"><a href="#cb14-2"></a>  CommandExecutor idGeneratorCommandExecutor = <span class="kw">null</span>;</span>
+<span id="cb14-3"><a href="#cb14-3"></a>  <span class="kw">if</span> (idGeneratorDataSource != <span class="kw">null</span>) {    </span>
+<span id="cb14-4"><a href="#cb14-4"></a>    idGeneratorCommandExecutor = ...</span>
+<span id="cb14-5"><a href="#cb14-5"></a>  } <span class="kw">else</span> <span class="kw">if</span> (idGeneratorDataSourceJndiName != <span class="kw">null</span>) {</span>
+<span id="cb14-6"><a href="#cb14-6"></a>    idGeneratorCommandExecutor = ...</span>
+<span id="cb14-7"><a href="#cb14-7"></a>  } <span class="kw">else</span> {</span>
+<span id="cb14-8"><a href="#cb14-8"></a>    idGeneratorCommandExecutor = ...</span>
+<span id="cb14-9"><a href="#cb14-9"></a>  }</span>
+<span id="cb14-10"><a href="#cb14-10"></a></span>
+<span id="cb14-11"><a href="#cb14-11"></a>  DbIdGenerator dbIdGenerator = <span class="kw">new</span> <span class="fu">DbIdGenerator</span>();</span>
+<span id="cb14-12"><a href="#cb14-12"></a>  dbIdGenerator.<span class="fu">setIdBlockSize</span>(idBlockSize);</span>
+<span id="cb14-13"><a href="#cb14-13"></a>  dbIdGenerator.<span class="fu">setCommandExecutor</span>(idGeneratorCommandExecutor);</span>
+<span id="cb14-14"><a href="#cb14-14"></a>  dbIdGenerator.<span class="fu">setCommandConfig</span>(<span class="fu">getDefaultCommandConfig</span>().<span class="fu">transactionRequiresNew</span>());</span>
+<span id="cb14-15"><a href="#cb14-15"></a>  idGenerator = dbIdGenerator;</span>
+<span id="cb14-16"><a href="#cb14-16"></a>}</span></code></pre></div>
+<h5 id="initbehaviorfactory-6.0-专属-行为工厂">initBehaviorFactory() 6.0 专属 行为工厂</h5>
+<p>activitybehavior工厂的默认实现。当ProcessEngineConfigurationImpl上没有注入自定义活动行为工厂时使用。</p>
+<h5 id="initlistenerfactory-6.0-专属-监听工厂">initListenerFactory() 6.0 专属 监听工厂</h5>
+<p>ListenerFactory的默认实现</p>
+<h5 id="initbpmnparser-6.0-专属-bpmn解析器">initBpmnParser() 6.0 专属 bpmn解析器</h5>
+<h5 id="initprocessdefinitioncache-6.0-专属-流程定义缓存初始化">initProcessDefinitionCache() 6.0 专属 流程定义缓存初始化</h5>
+<p>默认缓存:将所有内容保存在内存中，除非设置了限制。initProcessDefinitionInfoCache() 6.0 专属</p>
+<h5 id="initknowledgebasecache-6.0-专属-流程信息缓存初始化">initKnowledgeBaseCache() 6.0 专属 流程信息缓存初始化</h5>
+<h5 id="initjobhandlers-一堆job处理器">initJobHandlers() 一堆job处理器</h5>
+<div class="sourceCode" id="cb15"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb15-1"><a href="#cb15-1"></a>AsyncContinuationJobHandler asyncContinuationJobHandler = <span class="kw">new</span> <span class="fu">AsyncContinuationJobHandler</span>();</span>
+<span id="cb15-2"><a href="#cb15-2"></a>jobHandlers.<span class="fu">put</span>(asyncContinuationJobHandler.<span class="fu">getType</span>(), asyncContinuationJobHandler);</span>
+<span id="cb15-3"><a href="#cb15-3"></a></span>
+<span id="cb15-4"><a href="#cb15-4"></a>TriggerTimerEventJobHandler triggerTimerEventJobHandler = <span class="kw">new</span> <span class="fu">TriggerTimerEventJobHandler</span>();</span>
+<span id="cb15-5"><a href="#cb15-5"></a>jobHandlers.<span class="fu">put</span>(triggerTimerEventJobHandler.<span class="fu">getType</span>(), triggerTimerEventJobHandler);</span>
+<span id="cb15-6"><a href="#cb15-6"></a></span>
+<span id="cb15-7"><a href="#cb15-7"></a>TimerStartEventJobHandler timerStartEvent = <span class="kw">new</span> <span class="fu">TimerStartEventJobHandler</span>();</span>
+<span id="cb15-8"><a href="#cb15-8"></a>jobHandlers.<span class="fu">put</span>(timerStartEvent.<span class="fu">getType</span>(), timerStartEvent);</span>
+<span id="cb15-9"><a href="#cb15-9"></a></span>
+<span id="cb15-10"><a href="#cb15-10"></a>TimerSuspendProcessDefinitionHandler suspendProcessDefinitionHandler = <span class="kw">new</span> <span class="fu">TimerSuspendProcessDefinitionHandler</span>();</span>
+<span id="cb15-11"><a href="#cb15-11"></a>jobHandlers.<span class="fu">put</span>(suspendProcessDefinitionHandler.<span class="fu">getType</span>(), suspendProcessDefinitionHandler);</span>
+<span id="cb15-12"><a href="#cb15-12"></a></span>
+<span id="cb15-13"><a href="#cb15-13"></a>TimerActivateProcessDefinitionHandler activateProcessDefinitionHandler = <span class="kw">new</span> <span class="fu">TimerActivateProcessDefinitionHandler</span>();</span>
+<span id="cb15-14"><a href="#cb15-14"></a>jobHandlers.<span class="fu">put</span>(activateProcessDefinitionHandler.<span class="fu">getType</span>(), activateProcessDefinitionHandler);</span>
+<span id="cb15-15"><a href="#cb15-15"></a></span>
+<span id="cb15-16"><a href="#cb15-16"></a>ProcessEventJobHandler processEventJobHandler = <span class="kw">new</span> <span class="fu">ProcessEventJobHandler</span>();</span>
+<span id="cb15-17"><a href="#cb15-17"></a>jobHandlers.<span class="fu">put</span>(processEventJobHandler.<span class="fu">getType</span>(), processEventJobHandler);</span></code></pre></div>
+<h5 id="initjobmanager-job管理器">initJobManager(); job管理器</h5>
+<p>包含不绑定到任何特定作业类型(异步、定时器、挂起或死信)的方法，但通常适用于从一种类型转换到另一种类型。</p>
+<h5 id="initasyncexecutor-异步处理器-弱小的我瑟瑟发抖..真的看不懂">initAsyncExecutor(); 异步处理器 …弱小的我瑟瑟发抖..真的看不懂</h5>
+<div class="sourceCode" id="cb16"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb16-1"><a href="#cb16-1"></a>DefaultAsyncJobExecutor defaultAsyncExecutor = <span class="kw">new</span> <span class="fu">DefaultAsyncJobExecutor</span>();</span>
+<span id="cb16-2"><a href="#cb16-2"></a></span>
+<span id="cb16-3"><a href="#cb16-3"></a>  <span class="co">// Message queue mode</span></span>
+<span id="cb16-4"><a href="#cb16-4"></a>  defaultAsyncExecutor.<span class="fu">setMessageQueueMode</span>(asyncExecutorMessageQueueMode);</span>
+<span id="cb16-5"><a href="#cb16-5"></a></span>
+<span id="cb16-6"><a href="#cb16-6"></a>  <span class="co">// Thread pool config</span></span>
+<span id="cb16-7"><a href="#cb16-7"></a>  defaultAsyncExecutor.<span class="fu">setCorePoolSize</span>(asyncExecutorCorePoolSize);</span>
+<span id="cb16-8"><a href="#cb16-8"></a>  defaultAsyncExecutor.<span class="fu">setMaxPoolSize</span>(asyncExecutorMaxPoolSize);</span>
+<span id="cb16-9"><a href="#cb16-9"></a>  defaultAsyncExecutor.<span class="fu">setKeepAliveTime</span>(asyncExecutorThreadKeepAliveTime);</span>
+<span id="cb16-10"><a href="#cb16-10"></a></span>
+<span id="cb16-11"><a href="#cb16-11"></a>  <span class="co">// Threadpool queue</span></span>
+<span id="cb16-12"><a href="#cb16-12"></a>  <span class="kw">if</span> (asyncExecutorThreadPoolQueue != <span class="kw">null</span>) {</span>
+<span id="cb16-13"><a href="#cb16-13"></a>    defaultAsyncExecutor.<span class="fu">setThreadPoolQueue</span>(asyncExecutorThreadPoolQueue);</span>
+<span id="cb16-14"><a href="#cb16-14"></a>  }</span>
+<span id="cb16-15"><a href="#cb16-15"></a>  defaultAsyncExecutor.<span class="fu">setQueueSize</span>(asyncExecutorThreadPoolQueueSize);</span>
+<span id="cb16-16"><a href="#cb16-16"></a></span>
+<span id="cb16-17"><a href="#cb16-17"></a>  <span class="co">// Acquisition wait time</span></span>
+<span id="cb16-18"><a href="#cb16-18"></a>  defaultAsyncExecutor.<span class="fu">setDefaultTimerJobAcquireWaitTimeInMillis</span>(asyncExecutorDefaultTimerJobAcquireWaitTime);</span>
+<span id="cb16-19"><a href="#cb16-19"></a>  defaultAsyncExecutor.<span class="fu">setDefaultAsyncJobAcquireWaitTimeInMillis</span>(asyncExecutorDefaultAsyncJobAcquireWaitTime);</span>
+<span id="cb16-20"><a href="#cb16-20"></a></span>
+<span id="cb16-21"><a href="#cb16-21"></a>  <span class="co">// Queue full wait time</span></span>
+<span id="cb16-22"><a href="#cb16-22"></a>  defaultAsyncExecutor.<span class="fu">setDefaultQueueSizeFullWaitTimeInMillis</span>(asyncExecutorDefaultQueueSizeFullWaitTime);</span>
+<span id="cb16-23"><a href="#cb16-23"></a></span>
+<span id="cb16-24"><a href="#cb16-24"></a>  <span class="co">// Job locking</span></span>
+<span id="cb16-25"><a href="#cb16-25"></a>  defaultAsyncExecutor.<span class="fu">setTimerLockTimeInMillis</span>(asyncExecutorTimerLockTimeInMillis);</span>
+<span id="cb16-26"><a href="#cb16-26"></a>  defaultAsyncExecutor.<span class="fu">setAsyncJobLockTimeInMillis</span>(asyncExecutorAsyncJobLockTimeInMillis);</span>
+<span id="cb16-27"><a href="#cb16-27"></a>  <span class="kw">if</span> (asyncExecutorLockOwner != <span class="kw">null</span>) {</span>
+<span id="cb16-28"><a href="#cb16-28"></a>    defaultAsyncExecutor.<span class="fu">setLockOwner</span>(asyncExecutorLockOwner);</span>
+<span id="cb16-29"><a href="#cb16-29"></a>  }</span>
+<span id="cb16-30"><a href="#cb16-30"></a></span>
+<span id="cb16-31"><a href="#cb16-31"></a>  <span class="co">// Reset expired</span></span>
+<span id="cb16-32"><a href="#cb16-32"></a>  defaultAsyncExecutor.<span class="fu">setResetExpiredJobsInterval</span>(asyncExecutorResetExpiredJobsInterval);</span>
+<span id="cb16-33"><a href="#cb16-33"></a>  defaultAsyncExecutor.<span class="fu">setResetExpiredJobsPageSize</span>(asyncExecutorResetExpiredJobsPageSize);</span>
+<span id="cb16-34"><a href="#cb16-34"></a></span>
+<span id="cb16-35"><a href="#cb16-35"></a>  <span class="co">// Shutdown</span></span>
+<span id="cb16-36"><a href="#cb16-36"></a>  defaultAsyncExecutor.<span class="fu">setSecondsToWaitOnShutdown</span>(asyncExecutorSecondsToWaitOnShutdown);</span>
+<span id="cb16-37"><a href="#cb16-37"></a></span>
+<span id="cb16-38"><a href="#cb16-38"></a>  asyncExecutor = defaultAsyncExecutor;</span>
+<span id="cb16-39"><a href="#cb16-39"></a>}</span></code></pre></div>
+<h5 id="inittransactionfactory-初始化事务工厂-默认提供两种">initTransactionFactory() 初始化事务工厂 默认提供两种</h5>
+<pre class="java "><code>if (transactionsExternallyManaged) {
+  transactionFactory = new ManagedTransactionFactory();
+} else {
+  transactionFactory = new JdbcTransactionFactory();
+}</code></pre>
+<h5 id="initsqlsessionfactory-前提使用关系型数据库">initSqlSessionFactory() 前提：使用关系型数据库</h5>
+<p>初始化mybatis sqlsession</p>
+<h5 id="initsessionfactories-初始化sql-session工厂">initSessionFactories() 初始化sql session工厂</h5>
+<h5 id="initdatamanagers-初始化mappers">initDataManagers() 初始化mappers</h5>
+<p>mybatis使用的mapper</p>
+<h5 id="initentitymanagers-初始化实体">initEntityManagers() 初始化实体</h5>
+<h5 id="inithistorymanager-初始化historymapper-带有historylevel">initHistoryManager() 初始化historymapper 带有historyLevel</h5>
+<h5 id="initjpa初始化jpa">initJpa();初始化jpa</h5>
+<h5 id="initdeployers初始化deploymentmanager中的cache等">initDeployers()初始化deploymentManager中的cache等</h5>
+<h5 id="initdelegateinterceptor初始化-委托拦截器">initDelegateInterceptor()初始化 委托拦截器</h5>
+<h5 id="initeventhandlers-初始化事件处理器">initEventHandlers() 初始化事件处理器</h5>
+<h5 id="initfailedjobcommandfactory-失败的job命令工厂">initFailedJobCommandFactory() 失败的job命令工厂</h5>
+<h5 id="initeventdispatcher-初始化事件调度器">initEventDispatcher() 初始化事件调度器</h5>
+<h5 id="initprocessvalidator-初始化过程验证器">initProcessValidator() 初始化过程验证器</h5>
+<h5 id="initdatabaseeventlogging-数据库事件记录器">initDatabaseEventLogging() 数据库事件记录器</h5>
+<h5 id="initactiviti5compatibilityhandler-activiti5兼容处理器">initActiviti5CompatibilityHandler() activiti5兼容处理器</h5>
+<h5 id="configuratorsafterinit">configuratorsAfterInit()</h5>
