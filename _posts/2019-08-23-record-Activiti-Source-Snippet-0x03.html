@@ -1,0 +1,116 @@
+---
+layout: post
+title: Activiti源码随手记录 Interceptor
+subtitle: 看过了activiti的责任链模式，边看边写。
+date:  2019-08-23 04:26
+header-img:  img/in-post/record-Activiti-Source-Snippet-0x03.jpg
+---
+
+<h1 id="record-activiti-source-snippet-0x03">Record Activiti Source Snippet 0x03</h1>
+<p>特殊说明：本文基于activiti 6.x分支源码。</p>
+<p>看agenda的时候发现commond。然后又去了解了责任链。<a href="https://www.jianshu.com/p/8a157cb73434">这篇文章</a> 给我们解释了什么是责任链（chain）/拦截器（intercepter）设计模式，我认为写的很生动。</p>
+<p>先看到了 就从他开始写吧。昨天偶然弄到一个大佬画的<a href="http://craft6.cn/detail/activiti_research_command_chain_template_design_pattern.do">一个图</a>，里面讲了activiti的责任链模式和命令模式。</p>
+<p>里面有一个类就是这个类，看着很不错。就从这里开始看啦</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/CommandContextInterceptor.png" alt="" /><figcaption>CommandContextInterceptor</figcaption>
+</figure>
+<p>CommandInterceptor的子类及实现方法。一共1个抽象子类及10个实现类。10个类中的TotalExecutionTimeCommandInterceptor和LoggingCommandInvoker是test包下的。回头有时间看。</p>
+<h5 id="commandinterceptor-接口">CommandInterceptor 接口</h5>
+<p>从名字上看 就是告诉我们 这是一个过滤器，负责处理命令command的过滤器（责任链）。</p>
+<p>那这个过滤器的接口中定义了什么了呢？</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb1-1"><a href="#cb1-1"></a>&lt;T&gt; T <span class="fu">execute</span>(CommandConfig config, Command&lt;T&gt; command);</span>
+<span id="cb1-2"><a href="#cb1-2"></a></span>
+<span id="cb1-3"><a href="#cb1-3"></a>CommandInterceptor <span class="fu">getNext</span>();</span>
+<span id="cb1-4"><a href="#cb1-4"></a></span>
+<span id="cb1-5"><a href="#cb1-5"></a><span class="dt">void</span> <span class="fu">setNext</span>(CommandInterceptor next);</span></code></pre></div>
+<p>带有execute，就代表负责执行，也就是说这个接口下的子类都是负责执行command的，也就是说这个接口下的子类是command处理器。</p>
+<p>getNext 获取下一个command处理器</p>
+<p>setNext是设置下一个处理器操作。</p>
+<p>看到这里 有一个初步的认识了。CommandInterceptor是一个处理器，而且是链式的，还设定顺序。</p>
+<h5 id="abstractcommandinterceptor-抽象类">AbstractCommandInterceptor 抽象类。</h5>
+<p>将实际需求抽象出来，抽象成什么样子呢？</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb2-1"><a href="#cb2-1"></a><span class="co">/**</span></span>
+<span id="cb2-2"><a href="#cb2-2"></a> <span class="co">*</span> will be initialized by the <span class="an">{@link </span>org<span class="an">.</span>activiti<span class="an">.</span>engine<span class="an">.</span>ProcessEngineConfiguration ProcessEngineConfiguration<span class="an">}</span></span>
+<span id="cb2-3"><a href="#cb2-3"></a> <span class="co">*/</span></span>
+<span id="cb2-4"><a href="#cb2-4"></a><span class="kw">protected</span> CommandInterceptor next;</span>
+<span id="cb2-5"><a href="#cb2-5"></a></span>
+<span id="cb2-6"><a href="#cb2-6"></a><span class="at">@Override</span></span>
+<span id="cb2-7"><a href="#cb2-7"></a><span class="kw">public</span> CommandInterceptor <span class="fu">getNext</span>() {</span>
+<span id="cb2-8"><a href="#cb2-8"></a>  <span class="kw">return</span> next;</span>
+<span id="cb2-9"><a href="#cb2-9"></a>}</span>
+<span id="cb2-10"><a href="#cb2-10"></a></span>
+<span id="cb2-11"><a href="#cb2-11"></a><span class="at">@Override</span></span>
+<span id="cb2-12"><a href="#cb2-12"></a><span class="kw">public</span> <span class="dt">void</span> <span class="fu">setNext</span>(CommandInterceptor next) {</span>
+<span id="cb2-13"><a href="#cb2-13"></a>  <span class="kw">this</span>.<span class="fu">next</span> = next;</span>
+<span id="cb2-14"><a href="#cb2-14"></a>}</span></code></pre></div>
+<p>说实话 我看这个类的第一眼我就想起了Node。</p>
+<p>抛开责任链的想法，我不知道我的理解对不对啊。作者手里面有一堆处理器要写，这些处理器之间唯一的一个关系就是可能是顺序的。然后他就写一个node来实现一个顺序执行的处理器。</p>
+<h4 id="接下来就该看运行中的8个实际子处理器了">接下来就该看运行中的8个实际子处理器了。</h4>
+<h5 id="loginterceptor-debug日志处理器">LogInterceptor debug日志处理器。</h5>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190823103312540.png" alt="" /><figcaption>image-20190823103312540</figcaption>
+</figure>
+<p>每次执行到这个处理器的时候，先判断一下是否开启了debug，如果 没有开启debug，那么就啥都不执行 直接跳到下一个处理器。如果开启了debug。那么在每一次执行到这个处理器的时候 ，写上一个 starting命令 ，整个处理器链完全执行结束时候 返回一个finished。</p>
+<p>首先，这个finally很到位。 如果发生异常 ，那么无论发生什么都会打印finshed。值得磕头膜拜，学习</p>
+<p>ps：最开始我管LogInterceptor叫日志处理器，看完代码，我悄悄的加上debug一词</p>
+<h5 id="commandcontextinterceptor-命令上下文处理器">CommandContextInterceptor 命令上下文处理器</h5>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190823105615789.png" alt="" /><figcaption>image-20190823105615789</figcaption>
+</figure>
+<p>里面有点自己翻译的注释。</p>
+<p>第一行获取线程中command的已经存在上下文content。具体获取方式再研究。</p>
+<p>第二部分是处理上下文复用。复用，复用，重复使用。为啥？可能为了性能优化吧。如果内存中的一个上下文可以复用，应该会省很多内存吧。 接下来说一下一个代码。首先 做一个标识符用来标识是否被复用。如果已经存在的上下文是null的，或者不possible被复用或者出了异常的，都是不能被复用的。这时候需要重新创建一个上下文。或者将上下文标示为可以被复用。（ps：这里有两个小点，1，这样做之后能保证有一个上下文可用供使用，无论是否被复用。复用只是用来强调复用这件事，保证有一个上下文可以被使用才是不可缺少的逻辑。 2.代码中这段注释，似乎是用来解释为什么现有 上下文有异常也不能复用）</p>
+<p>第三部分 将处理好的上下文放在线程中去。一起放在线程中的还有config，和activiti5的兼容处理。 如果这部分出了问题，将上下文从stack中移除，不再使用，并且close掉。</p>
+<p>全局看下来 这个命令上下文处理器就是用来处理command的上下文的。能复用就服用，不能复用就新建，处理完再吧内存释放掉。</p>
+<h5 id="commandinvoker-核心的最后一个处理器">CommandInvoker 核心的最后一个处理器</h5>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190823141629420.png" alt="" /><figcaption>image-20190823141629420</figcaption>
+</figure>
+<p>这个类名简单明了，命令调用程序，白话就是执行命令的处理器。最最核心的处理器。注释也蛮多的 还有一个todo。66 。</p>
+<p>第一行，获取上下文。</p>
+<p>第二部分根据上下文生成多个agent。循环执行agent。</p>
+<p>第三部分。判断是否还有未执行的操作， 然后对未执行的操作 执行“非活动行为操作”（不理解，回头看agent的时候仔细看看）</p>
+<p>第四部分。哪里还有第四部分，都执行完了啊。不 ，有。 这里直接return了。return，return，这个不是调用链模式嘛，这里应该是执行next。哦哦哦。下面的getnext和setnext做了解释。这个类原来被作者定义为整个调用链的最后一个处理器</p>
+<p>关于agent的介绍，我只是扫了一眼，直接看agent我会疯掉的。现在发现值得agent是干什么用的了。接下来下篇吧，我可能看看agent，可能啊，我只是说可能。然后再参照这个类中的executeOperations和executeOperation和planOperation方法。</p>
+<h5 id="debugcommandinvoker-对核心处理器进行debug">DebugCommandInvoker 对核心处理器进行debug</h5>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190823143948427.png" alt="" /><figcaption>image-20190823143948427</figcaption>
+</figure>
+<p>这个类的名字告诉我们这个是对commandInvoker进行debug的。再看具体实现呢。没有复杂的引用，轻飘飘的一个super.exec就执行完成了。剩下的操作就是打印所有abstracOperation的子类的执行过程了。嗯。就这样就能对一个类进行debug了？这么简单？嗯。调用的时候不调用父类直接掉这个就实现了。嗯</p>
+<h5 id="jtatransactioninterceptor-事务处理器">JtaTransactionInterceptor 事务处理器</h5>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190823145725775.png" alt="" /><figcaption>image-20190823145725775</figcaption>
+</figure>
+<p>这个截图中包含大量的我对代码的注释。瞎写的，不代表任何权威。随便提意见，反正我的博客没有开评论功能。</p>
+<p>流程大概就是 进行新的事务处理的时候判断一下是否有政治进行的事务，如果有挂起原有事务，执行新的事务，执行结束继续执行旧的事务。 我就不写发生异常回滚，执行结束提交作业的具体介绍了，基操。看完了代码我有个问题。按照这个逻辑，如果同时过来1W个事务操作，第一个事务会一直挂起在哪里，一层层挂起，挂起。最后内存能支持住嘛？响应也不是太好吧。</p>
+<h5 id="retryinterceptor-重试处理器">RetryInterceptor 重试处理器</h5>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190823153427592.png" alt="" /><figcaption>image-20190823153427592</figcaption>
+</figure>
+<p>在这个类的最上方是有一行注释的，翻译过来是 拦截ActivitiOptimisticLockingException并再次尝试运行相同的命令。重试次数和重试之间等待的时间是可配置的。</p>
+<p>然后说一下这个重试的处理逻辑。首先啊。定义一下等待时间的毫秒数50s。然后用一个dowhile定义循环。每循环一次进行一次累加。执行之前先进行等待。等待多久呢？没执行一次 等待的毫秒数乘一次waitIncreaseFactor 。全部执行结束之后在告诉我们一下 我已经尽了努力了。加油。😄</p>
+<p>问题是我看着好像不是线程安全的吧。</p>
+<h5 id="jtaretryinterceptor-jta重试处理器">JtaRetryInterceptor JTA重试处理器</h5>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190823154224039.png" alt="" /><figcaption>image-20190823154224039</figcaption>
+</figure>
+<p>类的最上方的注释：如果在现有事务中调用我们，则无法执行重试。在这种情况下，事务将在第一个ActivitiOptimisticLockingException之后标记为“仅回滚”。</p>
+<p>JTA事务重试的逻辑是 如果called Inside Transaction（调用内部事务）跳过重试，否则执行重试处理器。</p>
+<h5 id="transactioncontextinterceptor-事务上下文处理器">TransactionContextInterceptor 事务上下文处理器</h5>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190823160359412.png" alt="" /><figcaption>image-20190823160359412</figcaption>
+</figure>
+<p>如果没有被复用并且有事务工厂，那么就将这个 上下文添加到事务工厂中处理，处理结束之后 将这个上下文从工厂中移除掉。</p>
+<h4 id="到这里-8个实际处理器代码看完了">到这里 8个实际处理器代码看完了</h4>
+<p>大体上脑子中能勾勒出一个处理器链。一个命令过来。执行一遍这个处理器链，一个又一个的顺序经过，有处理debug日志的，命令上下文的，核心处理器的，jta的，事务的，重试的。都执行过之后，才是真正的处理完。</p>
+<p>但是这些处理器又是什么样的顺序呢？config中啊 是这样婶儿写的。</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190823161746799.png" alt="" /><figcaption>image-20190823161746799</figcaption>
+</figure>
+<p>没看懂啊。好滴 inline一下。</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190823162130741.png" alt="" /><figcaption>image-20190823162130741</figcaption>
+</figure>
+<p>我右侧标示的有些问题啊。其实最开始添加的是5 然后234然后6然后7.</p>
+<p>客户端pre类型处理器=&gt;默认的事务=&gt;默认的上下文 =&gt;事务上下文=&gt;客户端处理器=&gt;核心处理器/debug核心处理器 。</p>
+<p>至此 责任链代码部分看的7788了。</p>
