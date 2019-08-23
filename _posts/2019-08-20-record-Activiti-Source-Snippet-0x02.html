@@ -259,46 +259,49 @@ if (listenerNotificationHelper == null) {
 <h5 id="initbusinesscalendarmanager-定时任务管理器">initBusinessCalendarManager() 定时任务管理器</h5>
 <h5 id="initcommandcontextfactory-命令context工厂">initCommandContextFactory() 命令Context工厂</h5>
 <h5 id="inittransactioncontextfactory-事务context工厂">initTransactionContextFactory() 事务Context工厂</h5>
-<h5 id="initcommandexecutors-核心-初始化command-命令模式中的command">initCommandExecutors() 核心 初始化command 命令模式中的command</h5>
-<div class="sourceCode" id="cb12"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb12-1"><a href="#cb12-1"></a>  <span class="fu">initDefaultCommandConfig</span>();</span>
-<span id="cb12-2"><a href="#cb12-2"></a>  <span class="fu">initSchemaCommandConfig</span>();</span>
-<span id="cb12-3"><a href="#cb12-3"></a>  <span class="fu">initCommandInvoker</span>();</span>
-<span id="cb12-4"><a href="#cb12-4"></a>  <span class="fu">initCommandInterceptors</span>();</span>
-<span id="cb12-5"><a href="#cb12-5"></a>  <span class="fu">initCommandExecutor</span>();</span></code></pre></div>
+<h5 id="initcommandexecutors-核心-初始化命令处理器">initCommandExecutors() 核心 初始化命令处理器</h5>
+<p>该方法内现使用一个list存储一堆命令执行器，包括客户端前置命令处理器，activiti自带的命令处理器，客户端自定义的命令处理器。这些命令处理器会被初始化成一个链式结构（责任链模式）来处理所有命令。用户处理除了可以自定义前置和自定义处理器，还可以选择</p>
+<ul>
+<li><p>activiti核心处理器是否进入debug模式（见initCommandInvoker方法）</p></li>
+<li><p>重写事务处理器 （createTransactionInterceptor抽象方法，且重写engineConfiguration）</p></li>
+<li><p>重写命令上下文工厂，事务上下文工厂（基本操作）</p></li>
+<li><p>是否打印debug日志 （LogInterceptor搜索isDebugEnabled）</p></li>
+</ul>
+<p>还有就是activiti的事务处理还有超时处理的代码的实现方式 我不是太赞同，核心的命令执行器竟然还有一个todo。嗯，差不多这些。</p>
 <h5 id="initservices-核心-初始化8中service">initServices() 核心 初始化8中service</h5>
-<div class="sourceCode" id="cb13"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb13-1"><a href="#cb13-1"></a>  <span class="fu">initService</span>(repositoryService);</span>
-<span id="cb13-2"><a href="#cb13-2"></a>  <span class="fu">initService</span>(runtimeService);</span>
-<span id="cb13-3"><a href="#cb13-3"></a>  <span class="fu">initService</span>(historyService);</span>
-<span id="cb13-4"><a href="#cb13-4"></a>  <span class="fu">initService</span>(identityService);</span>
-<span id="cb13-5"><a href="#cb13-5"></a>  <span class="fu">initService</span>(taskService);</span>
-<span id="cb13-6"><a href="#cb13-6"></a>  <span class="fu">initService</span>(formService);</span>
-<span id="cb13-7"><a href="#cb13-7"></a>  <span class="fu">initService</span>(managementService);</span>
-<span id="cb13-8"><a href="#cb13-8"></a>  <span class="fu">initService</span>(dynamicBpmnService);</span>
-<span id="cb13-9"><a href="#cb13-9"></a></span>
-<span id="cb13-10"><a href="#cb13-10"></a><span class="co">//所有service执行setCommandExecutor方法</span></span>
-<span id="cb13-11"><a href="#cb13-11"></a><span class="kw">public</span> <span class="dt">void</span> <span class="fu">initService</span>(<span class="bu">Object</span> service) {</span>
-<span id="cb13-12"><a href="#cb13-12"></a>  <span class="kw">if</span> (service <span class="kw">instanceof</span> ServiceImpl) {</span>
-<span id="cb13-13"><a href="#cb13-13"></a>    ((ServiceImpl) service).<span class="fu">setCommandExecutor</span>(commandExecutor);</span>
-<span id="cb13-14"><a href="#cb13-14"></a>  }</span>
-<span id="cb13-15"><a href="#cb13-15"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb12-1"><a href="#cb12-1"></a>  <span class="fu">initService</span>(repositoryService);</span>
+<span id="cb12-2"><a href="#cb12-2"></a>  <span class="fu">initService</span>(runtimeService);</span>
+<span id="cb12-3"><a href="#cb12-3"></a>  <span class="fu">initService</span>(historyService);</span>
+<span id="cb12-4"><a href="#cb12-4"></a>  <span class="fu">initService</span>(identityService);</span>
+<span id="cb12-5"><a href="#cb12-5"></a>  <span class="fu">initService</span>(taskService);</span>
+<span id="cb12-6"><a href="#cb12-6"></a>  <span class="fu">initService</span>(formService);</span>
+<span id="cb12-7"><a href="#cb12-7"></a>  <span class="fu">initService</span>(managementService);</span>
+<span id="cb12-8"><a href="#cb12-8"></a>  <span class="fu">initService</span>(dynamicBpmnService);</span>
+<span id="cb12-9"><a href="#cb12-9"></a></span>
+<span id="cb12-10"><a href="#cb12-10"></a><span class="co">//所有service执行setCommandExecutor方法</span></span>
+<span id="cb12-11"><a href="#cb12-11"></a><span class="kw">public</span> <span class="dt">void</span> <span class="fu">initService</span>(<span class="bu">Object</span> service) {</span>
+<span id="cb12-12"><a href="#cb12-12"></a>  <span class="kw">if</span> (service <span class="kw">instanceof</span> ServiceImpl) {</span>
+<span id="cb12-13"><a href="#cb12-13"></a>    ((ServiceImpl) service).<span class="fu">setCommandExecutor</span>(commandExecutor);</span>
+<span id="cb12-14"><a href="#cb12-14"></a>  }</span>
+<span id="cb12-15"><a href="#cb12-15"></a>}</span></code></pre></div>
 <h5 id="initidgenerator-初始化数据库id生成器应该是id自增相关的吧">initIdGenerator() 初始化数据库Id生成器（应该是id自增相关的吧）</h5>
 <p>后面的初始化SessionFactories部分有使用</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb14-1"><a href="#cb14-1"></a><span class="kw">if</span> (idGenerator == <span class="kw">null</span>) {</span>
-<span id="cb14-2"><a href="#cb14-2"></a>  CommandExecutor idGeneratorCommandExecutor = <span class="kw">null</span>;</span>
-<span id="cb14-3"><a href="#cb14-3"></a>  <span class="kw">if</span> (idGeneratorDataSource != <span class="kw">null</span>) {    </span>
-<span id="cb14-4"><a href="#cb14-4"></a>    idGeneratorCommandExecutor = ...</span>
-<span id="cb14-5"><a href="#cb14-5"></a>  } <span class="kw">else</span> <span class="kw">if</span> (idGeneratorDataSourceJndiName != <span class="kw">null</span>) {</span>
-<span id="cb14-6"><a href="#cb14-6"></a>    idGeneratorCommandExecutor = ...</span>
-<span id="cb14-7"><a href="#cb14-7"></a>  } <span class="kw">else</span> {</span>
-<span id="cb14-8"><a href="#cb14-8"></a>    idGeneratorCommandExecutor = ...</span>
-<span id="cb14-9"><a href="#cb14-9"></a>  }</span>
-<span id="cb14-10"><a href="#cb14-10"></a></span>
-<span id="cb14-11"><a href="#cb14-11"></a>  DbIdGenerator dbIdGenerator = <span class="kw">new</span> <span class="fu">DbIdGenerator</span>();</span>
-<span id="cb14-12"><a href="#cb14-12"></a>  dbIdGenerator.<span class="fu">setIdBlockSize</span>(idBlockSize);</span>
-<span id="cb14-13"><a href="#cb14-13"></a>  dbIdGenerator.<span class="fu">setCommandExecutor</span>(idGeneratorCommandExecutor);</span>
-<span id="cb14-14"><a href="#cb14-14"></a>  dbIdGenerator.<span class="fu">setCommandConfig</span>(<span class="fu">getDefaultCommandConfig</span>().<span class="fu">transactionRequiresNew</span>());</span>
-<span id="cb14-15"><a href="#cb14-15"></a>  idGenerator = dbIdGenerator;</span>
-<span id="cb14-16"><a href="#cb14-16"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb13"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb13-1"><a href="#cb13-1"></a><span class="kw">if</span> (idGenerator == <span class="kw">null</span>) {</span>
+<span id="cb13-2"><a href="#cb13-2"></a>  CommandExecutor idGeneratorCommandExecutor = <span class="kw">null</span>;</span>
+<span id="cb13-3"><a href="#cb13-3"></a>  <span class="kw">if</span> (idGeneratorDataSource != <span class="kw">null</span>) {    </span>
+<span id="cb13-4"><a href="#cb13-4"></a>    idGeneratorCommandExecutor = ...</span>
+<span id="cb13-5"><a href="#cb13-5"></a>  } <span class="kw">else</span> <span class="kw">if</span> (idGeneratorDataSourceJndiName != <span class="kw">null</span>) {</span>
+<span id="cb13-6"><a href="#cb13-6"></a>    idGeneratorCommandExecutor = ...</span>
+<span id="cb13-7"><a href="#cb13-7"></a>  } <span class="kw">else</span> {</span>
+<span id="cb13-8"><a href="#cb13-8"></a>    idGeneratorCommandExecutor = ...</span>
+<span id="cb13-9"><a href="#cb13-9"></a>  }</span>
+<span id="cb13-10"><a href="#cb13-10"></a></span>
+<span id="cb13-11"><a href="#cb13-11"></a>  DbIdGenerator dbIdGenerator = <span class="kw">new</span> <span class="fu">DbIdGenerator</span>();</span>
+<span id="cb13-12"><a href="#cb13-12"></a>  dbIdGenerator.<span class="fu">setIdBlockSize</span>(idBlockSize);</span>
+<span id="cb13-13"><a href="#cb13-13"></a>  dbIdGenerator.<span class="fu">setCommandExecutor</span>(idGeneratorCommandExecutor);</span>
+<span id="cb13-14"><a href="#cb13-14"></a>  dbIdGenerator.<span class="fu">setCommandConfig</span>(<span class="fu">getDefaultCommandConfig</span>().<span class="fu">transactionRequiresNew</span>());</span>
+<span id="cb13-15"><a href="#cb13-15"></a>  idGenerator = dbIdGenerator;</span>
+<span id="cb13-16"><a href="#cb13-16"></a>}</span></code></pre></div>
 <h5 id="initbehaviorfactory-6.0-专属-行为工厂">initBehaviorFactory() 6.0 专属 行为工厂</h5>
 <p>activitybehavior工厂的默认实现。当ProcessEngineConfigurationImpl上没有注入自定义活动行为工厂时使用。</p>
 <h5 id="initlistenerfactory-6.0-专属-监听工厂">initListenerFactory() 6.0 专属 监听工厂</h5>
@@ -308,65 +311,65 @@ if (listenerNotificationHelper == null) {
 <p>默认缓存:将所有内容保存在内存中，除非设置了限制。initProcessDefinitionInfoCache() 6.0 专属</p>
 <h5 id="initknowledgebasecache-6.0-专属-流程信息缓存初始化">initKnowledgeBaseCache() 6.0 专属 流程信息缓存初始化</h5>
 <h5 id="initjobhandlers-一堆job处理器">initJobHandlers() 一堆job处理器</h5>
-<div class="sourceCode" id="cb15"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb15-1"><a href="#cb15-1"></a>AsyncContinuationJobHandler asyncContinuationJobHandler = <span class="kw">new</span> <span class="fu">AsyncContinuationJobHandler</span>();</span>
-<span id="cb15-2"><a href="#cb15-2"></a>jobHandlers.<span class="fu">put</span>(asyncContinuationJobHandler.<span class="fu">getType</span>(), asyncContinuationJobHandler);</span>
-<span id="cb15-3"><a href="#cb15-3"></a></span>
-<span id="cb15-4"><a href="#cb15-4"></a>TriggerTimerEventJobHandler triggerTimerEventJobHandler = <span class="kw">new</span> <span class="fu">TriggerTimerEventJobHandler</span>();</span>
-<span id="cb15-5"><a href="#cb15-5"></a>jobHandlers.<span class="fu">put</span>(triggerTimerEventJobHandler.<span class="fu">getType</span>(), triggerTimerEventJobHandler);</span>
-<span id="cb15-6"><a href="#cb15-6"></a></span>
-<span id="cb15-7"><a href="#cb15-7"></a>TimerStartEventJobHandler timerStartEvent = <span class="kw">new</span> <span class="fu">TimerStartEventJobHandler</span>();</span>
-<span id="cb15-8"><a href="#cb15-8"></a>jobHandlers.<span class="fu">put</span>(timerStartEvent.<span class="fu">getType</span>(), timerStartEvent);</span>
-<span id="cb15-9"><a href="#cb15-9"></a></span>
-<span id="cb15-10"><a href="#cb15-10"></a>TimerSuspendProcessDefinitionHandler suspendProcessDefinitionHandler = <span class="kw">new</span> <span class="fu">TimerSuspendProcessDefinitionHandler</span>();</span>
-<span id="cb15-11"><a href="#cb15-11"></a>jobHandlers.<span class="fu">put</span>(suspendProcessDefinitionHandler.<span class="fu">getType</span>(), suspendProcessDefinitionHandler);</span>
-<span id="cb15-12"><a href="#cb15-12"></a></span>
-<span id="cb15-13"><a href="#cb15-13"></a>TimerActivateProcessDefinitionHandler activateProcessDefinitionHandler = <span class="kw">new</span> <span class="fu">TimerActivateProcessDefinitionHandler</span>();</span>
-<span id="cb15-14"><a href="#cb15-14"></a>jobHandlers.<span class="fu">put</span>(activateProcessDefinitionHandler.<span class="fu">getType</span>(), activateProcessDefinitionHandler);</span>
-<span id="cb15-15"><a href="#cb15-15"></a></span>
-<span id="cb15-16"><a href="#cb15-16"></a>ProcessEventJobHandler processEventJobHandler = <span class="kw">new</span> <span class="fu">ProcessEventJobHandler</span>();</span>
-<span id="cb15-17"><a href="#cb15-17"></a>jobHandlers.<span class="fu">put</span>(processEventJobHandler.<span class="fu">getType</span>(), processEventJobHandler);</span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb14-1"><a href="#cb14-1"></a>AsyncContinuationJobHandler asyncContinuationJobHandler = <span class="kw">new</span> <span class="fu">AsyncContinuationJobHandler</span>();</span>
+<span id="cb14-2"><a href="#cb14-2"></a>jobHandlers.<span class="fu">put</span>(asyncContinuationJobHandler.<span class="fu">getType</span>(), asyncContinuationJobHandler);</span>
+<span id="cb14-3"><a href="#cb14-3"></a></span>
+<span id="cb14-4"><a href="#cb14-4"></a>TriggerTimerEventJobHandler triggerTimerEventJobHandler = <span class="kw">new</span> <span class="fu">TriggerTimerEventJobHandler</span>();</span>
+<span id="cb14-5"><a href="#cb14-5"></a>jobHandlers.<span class="fu">put</span>(triggerTimerEventJobHandler.<span class="fu">getType</span>(), triggerTimerEventJobHandler);</span>
+<span id="cb14-6"><a href="#cb14-6"></a></span>
+<span id="cb14-7"><a href="#cb14-7"></a>TimerStartEventJobHandler timerStartEvent = <span class="kw">new</span> <span class="fu">TimerStartEventJobHandler</span>();</span>
+<span id="cb14-8"><a href="#cb14-8"></a>jobHandlers.<span class="fu">put</span>(timerStartEvent.<span class="fu">getType</span>(), timerStartEvent);</span>
+<span id="cb14-9"><a href="#cb14-9"></a></span>
+<span id="cb14-10"><a href="#cb14-10"></a>TimerSuspendProcessDefinitionHandler suspendProcessDefinitionHandler = <span class="kw">new</span> <span class="fu">TimerSuspendProcessDefinitionHandler</span>();</span>
+<span id="cb14-11"><a href="#cb14-11"></a>jobHandlers.<span class="fu">put</span>(suspendProcessDefinitionHandler.<span class="fu">getType</span>(), suspendProcessDefinitionHandler);</span>
+<span id="cb14-12"><a href="#cb14-12"></a></span>
+<span id="cb14-13"><a href="#cb14-13"></a>TimerActivateProcessDefinitionHandler activateProcessDefinitionHandler = <span class="kw">new</span> <span class="fu">TimerActivateProcessDefinitionHandler</span>();</span>
+<span id="cb14-14"><a href="#cb14-14"></a>jobHandlers.<span class="fu">put</span>(activateProcessDefinitionHandler.<span class="fu">getType</span>(), activateProcessDefinitionHandler);</span>
+<span id="cb14-15"><a href="#cb14-15"></a></span>
+<span id="cb14-16"><a href="#cb14-16"></a>ProcessEventJobHandler processEventJobHandler = <span class="kw">new</span> <span class="fu">ProcessEventJobHandler</span>();</span>
+<span id="cb14-17"><a href="#cb14-17"></a>jobHandlers.<span class="fu">put</span>(processEventJobHandler.<span class="fu">getType</span>(), processEventJobHandler);</span></code></pre></div>
 <h5 id="initjobmanager-job管理器">initJobManager(); job管理器</h5>
 <p>包含不绑定到任何特定作业类型(异步、定时器、挂起或死信)的方法，但通常适用于从一种类型转换到另一种类型。</p>
 <h5 id="initasyncexecutor-异步处理器-弱小的我瑟瑟发抖..真的看不懂">initAsyncExecutor(); 异步处理器 …弱小的我瑟瑟发抖..真的看不懂</h5>
-<div class="sourceCode" id="cb16"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb16-1"><a href="#cb16-1"></a>DefaultAsyncJobExecutor defaultAsyncExecutor = <span class="kw">new</span> <span class="fu">DefaultAsyncJobExecutor</span>();</span>
-<span id="cb16-2"><a href="#cb16-2"></a></span>
-<span id="cb16-3"><a href="#cb16-3"></a>  <span class="co">// Message queue mode</span></span>
-<span id="cb16-4"><a href="#cb16-4"></a>  defaultAsyncExecutor.<span class="fu">setMessageQueueMode</span>(asyncExecutorMessageQueueMode);</span>
-<span id="cb16-5"><a href="#cb16-5"></a></span>
-<span id="cb16-6"><a href="#cb16-6"></a>  <span class="co">// Thread pool config</span></span>
-<span id="cb16-7"><a href="#cb16-7"></a>  defaultAsyncExecutor.<span class="fu">setCorePoolSize</span>(asyncExecutorCorePoolSize);</span>
-<span id="cb16-8"><a href="#cb16-8"></a>  defaultAsyncExecutor.<span class="fu">setMaxPoolSize</span>(asyncExecutorMaxPoolSize);</span>
-<span id="cb16-9"><a href="#cb16-9"></a>  defaultAsyncExecutor.<span class="fu">setKeepAliveTime</span>(asyncExecutorThreadKeepAliveTime);</span>
-<span id="cb16-10"><a href="#cb16-10"></a></span>
-<span id="cb16-11"><a href="#cb16-11"></a>  <span class="co">// Threadpool queue</span></span>
-<span id="cb16-12"><a href="#cb16-12"></a>  <span class="kw">if</span> (asyncExecutorThreadPoolQueue != <span class="kw">null</span>) {</span>
-<span id="cb16-13"><a href="#cb16-13"></a>    defaultAsyncExecutor.<span class="fu">setThreadPoolQueue</span>(asyncExecutorThreadPoolQueue);</span>
-<span id="cb16-14"><a href="#cb16-14"></a>  }</span>
-<span id="cb16-15"><a href="#cb16-15"></a>  defaultAsyncExecutor.<span class="fu">setQueueSize</span>(asyncExecutorThreadPoolQueueSize);</span>
-<span id="cb16-16"><a href="#cb16-16"></a></span>
-<span id="cb16-17"><a href="#cb16-17"></a>  <span class="co">// Acquisition wait time</span></span>
-<span id="cb16-18"><a href="#cb16-18"></a>  defaultAsyncExecutor.<span class="fu">setDefaultTimerJobAcquireWaitTimeInMillis</span>(asyncExecutorDefaultTimerJobAcquireWaitTime);</span>
-<span id="cb16-19"><a href="#cb16-19"></a>  defaultAsyncExecutor.<span class="fu">setDefaultAsyncJobAcquireWaitTimeInMillis</span>(asyncExecutorDefaultAsyncJobAcquireWaitTime);</span>
-<span id="cb16-20"><a href="#cb16-20"></a></span>
-<span id="cb16-21"><a href="#cb16-21"></a>  <span class="co">// Queue full wait time</span></span>
-<span id="cb16-22"><a href="#cb16-22"></a>  defaultAsyncExecutor.<span class="fu">setDefaultQueueSizeFullWaitTimeInMillis</span>(asyncExecutorDefaultQueueSizeFullWaitTime);</span>
-<span id="cb16-23"><a href="#cb16-23"></a></span>
-<span id="cb16-24"><a href="#cb16-24"></a>  <span class="co">// Job locking</span></span>
-<span id="cb16-25"><a href="#cb16-25"></a>  defaultAsyncExecutor.<span class="fu">setTimerLockTimeInMillis</span>(asyncExecutorTimerLockTimeInMillis);</span>
-<span id="cb16-26"><a href="#cb16-26"></a>  defaultAsyncExecutor.<span class="fu">setAsyncJobLockTimeInMillis</span>(asyncExecutorAsyncJobLockTimeInMillis);</span>
-<span id="cb16-27"><a href="#cb16-27"></a>  <span class="kw">if</span> (asyncExecutorLockOwner != <span class="kw">null</span>) {</span>
-<span id="cb16-28"><a href="#cb16-28"></a>    defaultAsyncExecutor.<span class="fu">setLockOwner</span>(asyncExecutorLockOwner);</span>
-<span id="cb16-29"><a href="#cb16-29"></a>  }</span>
-<span id="cb16-30"><a href="#cb16-30"></a></span>
-<span id="cb16-31"><a href="#cb16-31"></a>  <span class="co">// Reset expired</span></span>
-<span id="cb16-32"><a href="#cb16-32"></a>  defaultAsyncExecutor.<span class="fu">setResetExpiredJobsInterval</span>(asyncExecutorResetExpiredJobsInterval);</span>
-<span id="cb16-33"><a href="#cb16-33"></a>  defaultAsyncExecutor.<span class="fu">setResetExpiredJobsPageSize</span>(asyncExecutorResetExpiredJobsPageSize);</span>
-<span id="cb16-34"><a href="#cb16-34"></a></span>
-<span id="cb16-35"><a href="#cb16-35"></a>  <span class="co">// Shutdown</span></span>
-<span id="cb16-36"><a href="#cb16-36"></a>  defaultAsyncExecutor.<span class="fu">setSecondsToWaitOnShutdown</span>(asyncExecutorSecondsToWaitOnShutdown);</span>
-<span id="cb16-37"><a href="#cb16-37"></a></span>
-<span id="cb16-38"><a href="#cb16-38"></a>  asyncExecutor = defaultAsyncExecutor;</span>
-<span id="cb16-39"><a href="#cb16-39"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb15-1"><a href="#cb15-1"></a>DefaultAsyncJobExecutor defaultAsyncExecutor = <span class="kw">new</span> <span class="fu">DefaultAsyncJobExecutor</span>();</span>
+<span id="cb15-2"><a href="#cb15-2"></a></span>
+<span id="cb15-3"><a href="#cb15-3"></a>  <span class="co">// Message queue mode</span></span>
+<span id="cb15-4"><a href="#cb15-4"></a>  defaultAsyncExecutor.<span class="fu">setMessageQueueMode</span>(asyncExecutorMessageQueueMode);</span>
+<span id="cb15-5"><a href="#cb15-5"></a></span>
+<span id="cb15-6"><a href="#cb15-6"></a>  <span class="co">// Thread pool config</span></span>
+<span id="cb15-7"><a href="#cb15-7"></a>  defaultAsyncExecutor.<span class="fu">setCorePoolSize</span>(asyncExecutorCorePoolSize);</span>
+<span id="cb15-8"><a href="#cb15-8"></a>  defaultAsyncExecutor.<span class="fu">setMaxPoolSize</span>(asyncExecutorMaxPoolSize);</span>
+<span id="cb15-9"><a href="#cb15-9"></a>  defaultAsyncExecutor.<span class="fu">setKeepAliveTime</span>(asyncExecutorThreadKeepAliveTime);</span>
+<span id="cb15-10"><a href="#cb15-10"></a></span>
+<span id="cb15-11"><a href="#cb15-11"></a>  <span class="co">// Threadpool queue</span></span>
+<span id="cb15-12"><a href="#cb15-12"></a>  <span class="kw">if</span> (asyncExecutorThreadPoolQueue != <span class="kw">null</span>) {</span>
+<span id="cb15-13"><a href="#cb15-13"></a>    defaultAsyncExecutor.<span class="fu">setThreadPoolQueue</span>(asyncExecutorThreadPoolQueue);</span>
+<span id="cb15-14"><a href="#cb15-14"></a>  }</span>
+<span id="cb15-15"><a href="#cb15-15"></a>  defaultAsyncExecutor.<span class="fu">setQueueSize</span>(asyncExecutorThreadPoolQueueSize);</span>
+<span id="cb15-16"><a href="#cb15-16"></a></span>
+<span id="cb15-17"><a href="#cb15-17"></a>  <span class="co">// Acquisition wait time</span></span>
+<span id="cb15-18"><a href="#cb15-18"></a>  defaultAsyncExecutor.<span class="fu">setDefaultTimerJobAcquireWaitTimeInMillis</span>(asyncExecutorDefaultTimerJobAcquireWaitTime);</span>
+<span id="cb15-19"><a href="#cb15-19"></a>  defaultAsyncExecutor.<span class="fu">setDefaultAsyncJobAcquireWaitTimeInMillis</span>(asyncExecutorDefaultAsyncJobAcquireWaitTime);</span>
+<span id="cb15-20"><a href="#cb15-20"></a></span>
+<span id="cb15-21"><a href="#cb15-21"></a>  <span class="co">// Queue full wait time</span></span>
+<span id="cb15-22"><a href="#cb15-22"></a>  defaultAsyncExecutor.<span class="fu">setDefaultQueueSizeFullWaitTimeInMillis</span>(asyncExecutorDefaultQueueSizeFullWaitTime);</span>
+<span id="cb15-23"><a href="#cb15-23"></a></span>
+<span id="cb15-24"><a href="#cb15-24"></a>  <span class="co">// Job locking</span></span>
+<span id="cb15-25"><a href="#cb15-25"></a>  defaultAsyncExecutor.<span class="fu">setTimerLockTimeInMillis</span>(asyncExecutorTimerLockTimeInMillis);</span>
+<span id="cb15-26"><a href="#cb15-26"></a>  defaultAsyncExecutor.<span class="fu">setAsyncJobLockTimeInMillis</span>(asyncExecutorAsyncJobLockTimeInMillis);</span>
+<span id="cb15-27"><a href="#cb15-27"></a>  <span class="kw">if</span> (asyncExecutorLockOwner != <span class="kw">null</span>) {</span>
+<span id="cb15-28"><a href="#cb15-28"></a>    defaultAsyncExecutor.<span class="fu">setLockOwner</span>(asyncExecutorLockOwner);</span>
+<span id="cb15-29"><a href="#cb15-29"></a>  }</span>
+<span id="cb15-30"><a href="#cb15-30"></a></span>
+<span id="cb15-31"><a href="#cb15-31"></a>  <span class="co">// Reset expired</span></span>
+<span id="cb15-32"><a href="#cb15-32"></a>  defaultAsyncExecutor.<span class="fu">setResetExpiredJobsInterval</span>(asyncExecutorResetExpiredJobsInterval);</span>
+<span id="cb15-33"><a href="#cb15-33"></a>  defaultAsyncExecutor.<span class="fu">setResetExpiredJobsPageSize</span>(asyncExecutorResetExpiredJobsPageSize);</span>
+<span id="cb15-34"><a href="#cb15-34"></a></span>
+<span id="cb15-35"><a href="#cb15-35"></a>  <span class="co">// Shutdown</span></span>
+<span id="cb15-36"><a href="#cb15-36"></a>  defaultAsyncExecutor.<span class="fu">setSecondsToWaitOnShutdown</span>(asyncExecutorSecondsToWaitOnShutdown);</span>
+<span id="cb15-37"><a href="#cb15-37"></a></span>
+<span id="cb15-38"><a href="#cb15-38"></a>  asyncExecutor = defaultAsyncExecutor;</span>
+<span id="cb15-39"><a href="#cb15-39"></a>}</span></code></pre></div>
 <h5 id="inittransactionfactory-初始化事务工厂-默认提供两种">initTransactionFactory() 初始化事务工厂 默认提供两种</h5>
 <pre class="java "><code>if (transactionsExternallyManaged) {
   transactionFactory = new ManagedTransactionFactory();
