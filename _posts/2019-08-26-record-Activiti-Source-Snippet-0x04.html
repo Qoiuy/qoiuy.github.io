@@ -1,0 +1,128 @@
+---
+layout: post
+title: Activiti源码随手记录 agenda
+subtitle: 没有完全看懂，有些点需要其他知识补充才能看懂
+date:  2019-08-26 02:30
+header-img:  img/in-post/record-Activiti-Source-Snippet-0x04.jpg
+---
+
+<h1 id="record-activiti-source-snippet-0x04">Record Activiti Source Snippet 0x04</h1>
+<p>agenda</p>
+<p>有道翻译 n. 议程；日常工作事项；日程表</p>
+<p>源码中 作者给的解释是：</p>
+<ul>
+<li>对于正在执行的每个API调用(以及相应的command)，都会创建一个新Agenda实例。</li>
+<li>在这个agenda上将会放置一些操作，CommandExecutor将一直执行这些操作，直到所有操作都执行完毕。</li>
+<li>在编写ActivityBehavior实现时，agenda还可以方便地访问计划新操作的方法。</li>
+<li>在命令执行期间，始终可以使用Context.getAgenda()获取议程的方式来获取Agenda。</li>
+</ul>
+<p>白话解释就是</p>
+<ol type="1">
+<li><p>每一个command正在执行的时候都会创建新的Agenda。具体代码见核心处理器CommandInvoker.execute ???</p></li>
+<li><p>CommandExecutor会直接执行agenda中的操作？？？没太理解，</p></li>
+<li><p>Behavior操作还没有看。但是我大体看了一下agenda中的方法很多都是被Behavior调用的。</p></li>
+<li><p>告诉我们调用agenda的方式，always， always，always 就厉害了。不管什么时候 一直能通过这种方式调用。</p></li>
+</ol>
+<h3 id="核心类图关系">核心类图关系</h3>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/DefaultActivitiEngineAgenda.png" alt="" /><figcaption>DefaultActivitiEngineAgenda</figcaption>
+</figure>
+<h5 id="agenda是最上层的接口">agenda是最上层的接口。</h5>
+<p>定义了isEmpty，getNextOperation和planOperation方法，分别处理是否为空，获取下一个操作，和计划下一个操作。额。我认为plan应该类似于set操作吧。估计只是作者为了凸显计划这个概念而使用的吧。</p>
+<h5 id="activitiengineagenda方法中增加了10个方法定义分别是">ActivitiEngineAgenda方法中增加了10个方法定义，分别是</h5>
+<ul>
+<li><p>planContinueProcessOperation 计划接下来 流程运行</p></li>
+<li><p>planContinueProcessSynchronousOperation 计划接下来流程 同步运行</p></li>
+<li><p>planContinueProcessInCompensation 计划接下来 流程 进行补偿</p></li>
+<li><p>planContinueMultiInstanceOperation 计划接下来 做多实例操作</p></li>
+<li><p>planTakeOutgoingSequenceFlowsOperation计划接下来跳出序列流操作</p></li>
+<li><p>planEndExecutionOperation 计划结束执行操作</p></li>
+<li><p>planTriggerExecutionOperation 计划定时器执行操作</p></li>
+<li><p>planDestroyScopeOperation 计划销毁范围？？操作</p></li>
+<li><p>planExecuteInactiveBehaviorsOperation计划执行不活跃的行为操作</p></li>
+</ul>
+<h5 id="defaultactivitiengineagenda-是具体的实现类">DefaultActivitiEngineAgenda 是具体的实现类。</h5>
+<p>1.先使用了策略模式将10中行为操作抽象，分成7个大类。 使用planOperation对操作进行处理。</p>
+<p>2.还定义了一个队列（linkedList）存储全部的操作。顺序取出（poll）</p>
+<p>3.看一下planOperation操作</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190824152514982.png" alt="" /><figcaption>image-20190824152514982</figcaption>
+</figure>
+<p>调用该方法时先将操作线程放在队列中。</p>
+<p>然后获取operation中的ExecutionEntity，使用上限对ExecutionEntity进行执行</p>
+<p>注意 整段代码只是创建了Runnable并没有任何执行操作。嗯。</p>
+<h3 id="abstractoperation-agenda具体的实现操作类">AbstractOperation agenda具体的实现操作类</h3>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/ContinueMultiInstanceOperation.png" alt="" /><figcaption>ContinueMultiInstanceOperation</figcaption>
+</figure>
+<p>刚刚不是说了嘛。DefaultActivitiEngineAgenda中具体执行10种操作被作者使用策略模式进行了抽象，抽象成什么样子呢就是AbstractOperation类了。AbstractOperation及子类的关系，看着不复杂吧。7个实现类 实现了AbstractOperation抽象类。AbstractOperation又是runable的接口实现，也就是说AbstractOperation是多线程操作。</p>
+<h5 id="abstractoperation-抽象类">AbstractOperation 抽象类</h5>
+<p>注释是这样写的</p>
+<ul>
+<li><p>抽象所有操作接口(可运行实例)的超类，将一些共享的帮助器方法和成员字段公开给子类。</p></li>
+<li><p>操作是一个可运行的实例，它在命令执行期间被放在Agenda上。</p></li>
+</ul>
+<p>先不看源码只看方法注释。</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190824153918482.png" alt="" /><figcaption>image-20190824153918482</figcaption>
+</figure>
+<p>这个现场中有上下文，有agenda数据，有执行数据。这三者是这个线程执行所需要的数据。三者get，set方法必不可少。除了这些呢？ 有获取当前流程的节点数据方法，执行listener方法，查找最开始进程方法。</p>
+<h5 id="triggerexecutionoperation-定时器线程">TriggerExecutionOperation 定时器线程</h5>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190824155501235.png" alt="" /><figcaption>image-20190824155501235</figcaption>
+</figure>
+<p>如果一个FlowNode类型的节点的行为是 定时器激活类型行为 执行定时器。如果这个节点是BoundaryEvent类型元素 进行历史记录。</p>
+<h5 id="takeoutgoingsequenceflowsoperation-离开流程">TakeOutgoingSequenceFlowsOperation 离开流程</h5>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190825113803631.png" alt="" /><figcaption>image-20190825113803631</figcaption>
+</figure>
+<p>这个类的最上方的注释 翻译过来是 ：将FlowElement留在ExecutionEntity当前所在的位置，并将其留在序列流之后的操作。</p>
+<p>说白了就是 跳出整个执行流程。不过，当引入了补偿事件之后，就不能单纯的跳出整个流程了，如果是补偿，需要执行补偿之后的流程。</p>
+<p>于是这个方法执行的就是，当你要跳出一个正在执行的流程时，先检查是否有补偿事件，有，执行补偿事件，没有，执行跳出流程活动，并且进行一个清理工作，例如删除节点/连接</p>
+<p>具体的补偿事件可以参考<a href="https://my.oschina.net/JavaLaw/blog/1592879">这篇文章</a>，然后这个类中的几个封装好的方法也不过多做解释了。使用时再看。</p>
+<h5 id="executeinactivebehaviorsoperation-执行非活动行为操作">ExecuteInactiveBehaviorsOperation 执行非活动行为操作</h5>
+<p>通常作为处理命令的最后一个操作调度的操作。</p>
+<p>执行当前在实现InactiveActivityBehavior接口的活动中的执行的“后台”行为。</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190826111353754.png" alt="" /><figcaption>image-20190826111353754</figcaption>
+</figure>
+<h5 id="continuemultiinstanceoperation-多实例线程">ContinueMultiInstanceOperation 多实例线程</h5>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190826072819551.png" alt="" /><figcaption>image-20190826072819551</figcaption>
+</figure>
+<p>类中的注释 是这样说的：执行多实例实例时的特殊操作。它类似于ContinueProcessOperation，但是更简单，因为它不需要满足那么多的用例。</p>
+<p>回头看这个类中的run方法，简单的判断之后对节点进行执行，同步操作执行同步func，异步操作执行异步func。</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190826072936937.png" alt="" /><figcaption>image-20190826072936937</figcaption>
+</figure>
+<p>再来看同步和异步都执行了什么？同步下，限制性监听，记录history，执行代码，出现问题之后重新抛出业务故障，=没了，好像也没多复杂啊。但不知道为啥就是想沾上这个代码。</p>
+<h5 id="endexecutionoperation-清理剩余流程">EndExecutionOperation 清理剩余流程</h5>
+<p>类注释</p>
+<ul>
+<li>此操作结束执行，并遵循典型的BPMN规则来继续该流程(如果可能的话)。</li>
+<li>这个操作通常不是从ActivityBehavior调度的，而是从另一个操作调度的。</li>
+<li>当条件是流程无法通过常规方式继续，并且需要执行清理时，就会发生这种情况，这可能会为流程实例的继续提供新的方式。</li>
+</ul>
+<h5 id="destroyscopeoperation-销毁域">DestroyScopeOperation 销毁域</h5>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190826085827791.png" alt="" /><figcaption>image-20190826085827791</figcaption>
+</figure>
+<p>注释翻译：销毁范围(例如子进程):这意味着删除该范围内的所有子执行、任务、作业、变量等。 典型的例子是位于子流程边界上并被触发的中断边界事件。此时，子流程中的所有内容都需要销毁。</p>
+<p>看着代码很多 其实逻辑不复杂，清除各种各样的数据而已。清除哪些数据呢？</p>
+<p>executionEntity，task，timerJobs，jobEntity，suspenedJobEntity，DeadLetterJob，variableInstale。</p>
+<h5 id="plancontinueprocessoperation-具体执行">planContinueProcessOperation 具体执行</h5>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190826105116639.png" alt="" /><figcaption>image-20190826105116639</figcaption>
+</figure>
+<p>核心逻辑</p>
+<ul>
+<li><p>获取ExecutionEntity上的当前流元素集并执行关联ActivityBehavior的操作。在异步的情况下，调度作业。</p></li>
+<li><p>还要确保调用了ExecutionListener实例。</p></li>
+</ul>
+<p>脑袋昏昏沉沉，这段先留着 之后翻译。</p>
+<h5 id="总结-全程7个类下来">总结 全程7个类下来。</h5>
+<p>EndExecutionOperation,planContinueProcessOperation两个类没有仔细看。 太乱了。</p>
+<p>对具体的comond进行几次分类呢？ 定时器，离开流程，多实例，结束，销毁域，执行。</p>
+<p>那么问题来了 agenda到底是做什么的呢？</p>
+<p>首先 agenda执行的是各种各样的线程。这些线程执行了什么呢？ 获取流程信息进行各种各样的执行。或者销毁，或者执行，或者执行定时器。 不管是哪种都应该是直接执行的。</p>
+<p>没找到start方法。懵了。先看看其他的然后回头看这个</p>
