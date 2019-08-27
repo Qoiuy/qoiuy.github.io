@@ -1,0 +1,124 @@
+---
+layout: post
+title: ip代理池源码阅读01
+subtitle: 第一部分 记录01-06项目
+date:  2019-08-27 04:28
+header-img:  img/in-post/ip-proxy-source-0x00
+---
+
+<h1 id="ip代理池源码">ip代理池源码</h1>
+<h3 id="java-boommanpro-proxy-pool-使用什么爬虫上传sql加颗">⭐⭐⭐java-BoomManPro-proxy-pool 使用什么爬虫？上传sql加颗</h3>
+<ol type="1">
+<li>有sql，修改src/main/resources/application.yml就可以使用</li>
+<li>访问 http://192.168.2.219:8180/backDoor/xiciProxyPoolTask 进行爬取</li>
+<li>能爬取到数据</li>
+<li>XiciProxyPoolServiceTest.validateProxyPool测试爬取到的数据。</li>
+<li>校验ip可使用方式为 java.net.Proxy+okhttp 具体见ValidateProxy类中内容</li>
+<li>爬取https://www.xicidaili.com/nn/ 西刺 作为数据源。</li>
+<li>使用me.ghui.Fruit 解析html 页面</li>
+<li>使用com.squareup.okhttp3 对西刺数据进行访问</li>
+<li>存储在mysql 中ipproxy.proxy_pool</li>
+</ol>
+<h3 id="java-httpproxy-完美readme加颗代码简单易读一颗">⭐⭐⭐⭐java-HttpProxy 完美readme加颗。代码简单易读一颗</h3>
+<ol type="1">
+<li>IPSpider 主要爬取类</li>
+<li>运行main进行爬取 爬取西刺的数据</li>
+<li>使用jsoup进行页面解析</li>
+<li>使用Java.net进行请求数据</li>
+<li>IPUtils是用来判断代码是否成功的 isValid 和getMyIp 原理到底是啥呢？</li>
+<li>作者的readme就值4星</li>
+<li>使用Proxy进行校验</li>
+<li>对西刺数据进行爬取</li>
+<li>多线程处理思路 值得膜拜</li>
+</ol>
+<h3 id="java-ipproxy">⭐⭐java-IpProxy</h3>
+<ol type="1">
+<li>spring 需要使用tomcat启动。</li>
+<li>基本业务线就是 开始爬去代理，开启校验，获取可</li>
+<li>用ip/ProxyManager类是用来进行爬取数据的核心类，使用 <a href="https://webmagic.io/">webmagic</a> 进行爬取和解析数，可看的点应该就是对webmagic 重新封装了吧</li>
+<li>ProxyManager中比较妙的代码是103L addPipeline(proxyPipeline)。 这句代表使用代理进行爬取。自己弄ip，给自己用。很妙。</li>
+<li>ProxyManager对不同网址进行不同处理，使用了一个策略 IPageProcessor，页面的解析使用的webmagic。</li>
+<li>使用java.net.Proxy校验代理</li>
+<li>项目做了定时器</li>
+<li>www.66ip.cn www.89ip.cn ip.ihuan.me www.kuaidaili.com www.xicidaili.com</li>
+<li>启动之后有4个请求地址</li>
+</ol>
+<ul>
+<li>localhost:4200/SpringMVC_war/proxy/gets 获取全部可用</li>
+<li>localhost:4200/SpringMVC_war/proxy/get 获取一个可用</li>
+<li>localhost:4200/SpringMVC_war/proxy/startCrawel 开始爬虫 爬取了之后的数据为 <img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190826165238601.png" alt="image-20190826165238601" /> get请求和gets请求为 <img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190826165321233.png" alt="image-20190826165321233" /> <img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190826165332874.png" alt="image-20190826165332874" /></li>
+<li>localhost:4200/SpringMVC_war/proxy/startValidater 校验之后的数据是这样的 <img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190826165533195.png" alt="image-20190826165533195" />get和gets请求结果是这样的 <img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190826165639494.png" alt="image-20190826165639494" /><img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190826165700037.png" alt="image-20190826165700037" /></li>
+</ul>
+<h3 id="java-proxyippool-使用redis加颗">⭐⭐⭐java-ProxyIpPool 使用redis加颗</h3>
+<ol type="1">
+<li><p>Redis springboot README介绍的挺清楚了。</p>
+<pre><code>- fetcher 收集网上代理IP的爬虫,目前有`GoubanjiaFetcher`,`KuaiDailiFetcher`,`Www66IPFetcher`,`XichiDailiFetcher`四个爬虫,分别收集四个网站的代理IP.如果需要收集其他网站的IP,可以在该模块下增加相应实现.
+- schedule 定时任务,定时从网络上爬取最新IP,定时验证已有代理的可用性.
+- db 存储功能, 目前采用redis保存可用代理
+- boot 项目的启动类
+- api restapi实现
+- utils 一些工具类库</code></pre></li>
+<li><p>java.net.Proxy 校验 见 ProxyUtil</p></li>
+<li><p>自己写的多线程类Scheduler ，Executors.newScheduledThreadPool创建线程池。见Scheduler</p></li>
+<li><p>使用jsoup解析数据 www.66ip.cn www.xicidaili.com/ www.kuaidaili.com/free/ www.goubanjia.com/free/</p></li>
+<li><p>提供了api服务</p>
+<p>readme中有介绍</p></li>
+</ol>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190827073817327.png" alt="" /><figcaption>image-20190827073817327</figcaption>
+</figure>
+<h3 id="java-proxypool4j-多线程处理-加颗-httpclient使用加颗">⭐⭐⭐⭐java-ProxyPool4J 多线程处理 加颗 httpclient使用加颗</h3>
+<ol type="1">
+<li>hibernate 自动生成sql</li>
+<li>ProxypoolServerApplication 用于启动项目 没有提供任何api服务</li>
+<li>代码一个字 乱。作者可能会很多好东西，但是代码太乱 看不见 例如</li>
+</ol>
+<div class="sourceCode" id="cb2"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb2-1"><a href="#cb2-1"></a>httpClientBuilder</span>
+<span id="cb2-2"><a href="#cb2-2"></a>                <span class="co">// 把请求相关的超时信息设置到连接客户端</span></span>
+<span id="cb2-3"><a href="#cb2-3"></a>                .<span class="fu">setDefaultRequestConfig</span>(requestConfig)</span>
+<span id="cb2-4"><a href="#cb2-4"></a>                <span class="co">// 把请求重试设置到连接客户端</span></span>
+<span id="cb2-5"><a href="#cb2-5"></a>                .<span class="fu">setRetryHandler</span>(<span class="kw">new</span> <span class="fu">RetryHandler</span>())  <span class="co">//这里</span></span>
+<span id="cb2-6"><a href="#cb2-6"></a>                <span class="co">// 配置连接池管理对象</span></span>
+<span id="cb2-7"><a href="#cb2-7"></a>                .<span class="fu">setConnectionManager</span>(connManager);</span></code></pre></div>
+<ol start="4" type="1">
+<li><p>还用了工厂模式ProxyListPageParserFactory 使用SitePool 里面的hashmap创建的key-value 初始化工厂。</p>
+<p>工厂里面放一堆ProxyListPageParser。用来解析html能爬3个站ip https://www.kuaidaili.com Xicidaili 核心解析类 使用jsoup解析</p></li>
+<li><p>项目还用了多线程。见ScheduleManager中的生成者和消费者。生产者（CrawlerProducer）负责爬取ip。消费者（CheckValidatorConsumer）负责校验ip。生产者和消费者产生的数据放在代理队列（checkWaitingOldQueue）中，使用新的线程将数据存储到mysql中。</p></li>
+<li><p>使用HttpClient测试代理是否可用具体见ProxyValidator</p></li>
+</ol>
+<h3 id="java-chenerzhu-proxy-pool-read加颗-多个ip加颗">⭐⭐⭐java-chenerzhu-proxy-pool read加颗 多个ip加颗</h3>
+<p>吹牛皮 减一颗</p>
+<ol type="1">
+<li><p>readme写的不错</p></li>
+<li><p>ProxyPoolApplication 扫描 JobContextListener，listener 启动了 SchedulerJob和CrawlerJob。</p></li>
+<li><p>SchedulerJob中启动了3个定时任务 分别执行同步数据到redis，同步数据到mysql，校验redis。</p></li>
+<li><p>代码好乱。 使用for循环updatemysql</p></li>
+<li><p>使用IProxyIpRedisService封装redis和mysql操作</p></li>
+<li><pre><code>代理ip均来自爬虫爬取，有些国内爬取的ip大多都不能用，代理池的ip可用ip大多是国外的ip。爬取的网站有：http://www.xicidaili.com/nn  ，http://www.data5u.com/free/index.shtml  ，https://free-proxy-list.net ，https://www.my-proxy.com/free-proxy-list.html ，http://spys.one/en/free-proxy-list/ ， https://www.proxynova.com/proxy-server-list/ ，https://www.proxy4free.com/list/webproxy1.html ，http://www.gatherproxy.com/ 。</code></pre></li>
+<li><p>CrawlerJob就是正式的爬虫线程了。使用Jsoup解析。</p></li>
+<li><p>提供了接口</p></li>
+<li><p>使用java.net校验 见ProxyUtils</p></li>
+</ol>
+<h3 id="本文分析6个项目">本文分析6个项目</h3>
+<ul>
+<li><p><input type="checkbox" disabled="" checked="" />
+需要学习java.net校验和http.client校验代理是否可用。分析原理。</p><p>Java.net校验的核心代码。 但是要我看 这里的responseCode只能代码访问成功了吧。。例如，访问百度的ip，百度对ip进行了封禁，那个baidu返回的数据可能是false，但是不能代表ip无效。</p></li>
+</ul>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190827145709617.png" alt="" /><figcaption>image-20190827145709617</figcaption>
+</figure>
+<p>java.net.Proxy 该类表示代理设置，通常是类型(http、socks)和套接字地址。代理是一个不可变的对象。</p>
+<p>httpclient测试代理核心代码。</p>
+<figure>
+<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190827170946123.png" alt="" /><figcaption>image-20190827170946123</figcaption>
+</figure>
+<ul>
+<li><p><input type="checkbox" disabled="" checked="" />
+需要 总结一下全部爬取的网址。 不需要使用花花的页面解析 httpclient+jsoup 就够了</p></li>
+<li><p><input type="checkbox" disabled="" checked="" />
+写的爬虫带有api访问似乎会提升star效果，至少给我的体验是的。</p></li>
+<li><p><input type="checkbox" disabled="" checked="" />
+如果代码分模块之后会更易读</p></li>
+<li><p><input type="checkbox" disabled="" checked="" />
+受java-IpProxy的观点影响，ip代理池要 给自己用才算是好的项目</p></li>
+</ul>
