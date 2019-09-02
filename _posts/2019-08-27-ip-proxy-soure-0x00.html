@@ -46,10 +46,10 @@ header-img:  img/in-post/ip-proxy-source-0x00.jpg
 <ul>
 <li>localhost:4200/SpringMVC_war/proxy/gets 获取全部可用</li>
 <li>localhost:4200/SpringMVC_war/proxy/get 获取一个可用</li>
-<li>localhost:4200/SpringMVC_war/proxy/startCrawel 开始爬虫 爬取了之后的数据为 <img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190826165238601.png" alt="image-20190826165238601" /> get请求和gets请求为 <img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190826165321233.png" alt="image-20190826165321233" /> <img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190826165332874.png" alt="image-20190826165332874" /></li>
-<li>localhost:4200/SpringMVC_war/proxy/startValidater 校验之后的数据是这样的 <img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190826165533195.png" alt="image-20190826165533195" />get和gets请求结果是这样的 <img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190826165639494.png" alt="image-20190826165639494" /><img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190826165700037.png" alt="image-20190826165700037" /></li>
+<li>localhost:4200/SpringMVC_war/proxy/startCrawel 开始爬虫 爬取了之后的数据为 <img src="https://mdpic.qoiuy.com/img/mdpic/image-20190826165238601.png" alt="image-20190826165238601" /> get请求和gets请求为 <img src="https://mdpic.qoiuy.com/img/mdpic/image-20190826165321233.png" alt="image-20190826165321233" /> <img src="https://mdpic.qoiuy.com/img/mdpic/image-20190826165332874.png" alt="image-20190826165332874" /></li>
+<li>localhost:4200/SpringMVC_war/proxy/startValidater 校验之后的数据是这样的 <img src="https://mdpic.qoiuy.com/img/mdpic/image-20190826165533195.png" alt="image-20190826165533195" />get和gets请求结果是这样的 <img src="https://mdpic.qoiuy.com/img/mdpic/image-20190826165639494.png" alt="image-20190826165639494" /><img src="https://mdpic.qoiuy.com/img/mdpic/image-20190826165700037.png" alt="image-20190826165700037" /></li>
 </ul>
-<h3 id="java-proxyippool-使用redis加颗">⭐⭐⭐java-ProxyIpPool 使用redis加颗</h3>
+<h3 id="java-denghuichao-proxy-pool-使用redis加颗">⭐⭐⭐java-denghuichao-proxy-pool 使用redis加颗</h3>
 <ol type="1">
 <li><p>Redis springboot README介绍的挺清楚了。</p>
 <pre><code>- fetcher 收集网上代理IP的爬虫,目前有`GoubanjiaFetcher`,`KuaiDailiFetcher`,`Www66IPFetcher`,`XichiDailiFetcher`四个爬虫,分别收集四个网站的代理IP.如果需要收集其他网站的IP,可以在该模块下增加相应实现.
@@ -65,7 +65,7 @@ header-img:  img/in-post/ip-proxy-source-0x00.jpg
 <p>readme中有介绍</p></li>
 </ol>
 <figure>
-<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190827073817327.png" alt="" /><figcaption>image-20190827073817327</figcaption>
+<img src="https://mdpic.qoiuy.com/img/mdpic/image-20190827073817327.png" alt="" /><figcaption>image-20190827073817327</figcaption>
 </figure>
 <h3 id="java-proxypool4j-多线程处理-加颗-httpclient使用加颗">⭐⭐⭐⭐java-ProxyPool4J 多线程处理 加颗 httpclient使用加颗</h3>
 <ol type="1">
@@ -105,12 +105,12 @@ header-img:  img/in-post/ip-proxy-source-0x00.jpg
 需要学习java.net校验和http.client校验代理是否可用。分析原理。</p><p>Java.net校验的核心代码。 但是要我看 这里的responseCode只能代码访问成功了吧。。例如，访问百度的ip，百度对ip进行了封禁，那个baidu返回的数据可能是false，但是不能代表ip无效。</p></li>
 </ul>
 <figure>
-<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190827145709617.png" alt="" /><figcaption>image-20190827145709617</figcaption>
+<img src="https://mdpic.qoiuy.com/img/mdpic/image-20190827145709617.png" alt="" /><figcaption>image-20190827145709617</figcaption>
 </figure>
 <p>java.net.Proxy 该类表示代理设置，通常是类型(http、socks)和套接字地址。代理是一个不可变的对象。</p>
 <p>httpclient测试代理核心代码。</p>
 <figure>
-<img src="http://iszhanggc-private-blog.oss-cn-beijing.aliyuncs.com/img/mdpic/image-20190827170946123.png" alt="" /><figcaption>image-20190827170946123</figcaption>
+<img src="https://mdpic.qoiuy.com/img/mdpic/image-20190827170946123.png" alt="" /><figcaption>image-20190827170946123</figcaption>
 </figure>
 <ul>
 <li><p><input type="checkbox" disabled="" checked="" />
