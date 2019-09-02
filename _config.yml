@@ -6,7 +6,7 @@ header-img: img/home-bg.jpg
 email: iszhanggc@163.com
 description: ""
 keyword: ""
-url: "blog.qoiuy.com"              # your host, for absolute URL
+url: ""              # your host, for absolute URL
 baseurl: ""         # for example, '/blog' if your blog hosted on 'host/blog'
 picurl: "https://mdpic.qoiuy.com"
 jsurl: "https://mdpic.qoiuy.com"
