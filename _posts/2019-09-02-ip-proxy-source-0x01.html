@@ -1,0 +1,144 @@
+---
+layout: post
+title: ip代理池源码阅读02
+subtitle: 第二部分项目源码阅读
+date:  2019-09-02 08:31
+header-img:  img/in-post/ip-proxy-source-0x01.jpg
+---
+
+<h1 id="ip-proxy-soure-0x01">Ip-proxy-soure-0x01</h1>
+<p>之前看了6个项目，看到了一下代理池项目必备的几 项。爬取的域名，校验，存储数据 方式。也不是必备吧。主要是我看了他们的项目，大多数爬取了别人现成的ip，然后进行筛选，所以重点自然而然就是爬啦哪些站，的ip，ip也分有效无效。如何校验 也变成了重点。</p>
+<p>我要是写爬ip的话。我会将url是否可以爬取 和 ip爬取进行分离。分成两个模块</p>
+<p>看的多了，也就大概都类似了。我不再太细节化去看，找到核心需求的实现。</p>
+<p>获取到的新思路</p>
+<ol type="1">
+<li>测试一下，直接使用代理和通过代理服务器两种实现的数据返回时间。</li>
+<li>布隆过滤器去重。</li>
+</ol>
+<h3 id="javaproxyippool">⭐⭐⭐⭐java–proxyIppool</h3>
+<ol type="1">
+<li>crawler4j爬取页面</li>
+<li>数据存储在redis中</li>
+<li>使用定时器</li>
+<li>爬取了http://www.kxdaili.com/ http://www.ip181.com/</li>
+<li>java.net测试proxy</li>
+</ol>
+<h3 id="java-fengzhizi715-proxypool-spring用的蛮6的">⭐⭐⭐java-fengzhizi715-ProxyPool spring用的蛮6的</h3>
+<ol type="1">
+<li><p>将整个项目分成两个模块，爬ip模块和web</p></li>
+<li><p>所有ProxyListPageParser的子类是爬取并解析的类。除了这些还有好几个</p>
+<p>https://proxy.mimvp.com/ http://www.xiaohexia.cn/</p></li>
+</ol>
+<table>
+<colgroup>
+<col style="width: 34%" />
+<col style="width: 65%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>CoderBusyProxyListPageParser</th>
+<th>https://proxy.coderbusy.com/classical/anonymous-type/highanonymous.aspx?page=1</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>XicidailiProxyListPageParser</td>
+<td>http://www.xicidaili.com/nn/1.html</td>
+</tr>
+<tr class="even">
+<td>MogumiaoProxyListPageParser</td>
+<td>http://www.mogumiao.com/web</td>
+</tr>
+<tr class="odd">
+<td>ProxyDbProxyListPageParser</td>
+<td>http://proxydb.net/</td>
+</tr>
+<tr class="even">
+<td>FeilongipProxyListPageParser</td>
+<td>http://www.feilongip.com/</td>
+</tr>
+<tr class="odd">
+<td>Ip3366ProxyListPageParser</td>
+<td>http://www.ip3366.net/</td>
+</tr>
+<tr class="even">
+<td>ProxyListPlusProxyListPageParser</td>
+<td>https://list.proxylistplus.com/Fresh-HTTP-Proxy-List-1</td>
+</tr>
+<tr class="odd">
+<td>Data4uProxyListPageParser</td>
+<td>http://www.data5u.com/</td>
+</tr>
+<tr class="even">
+<td>M66ipProxyListPageParser</td>
+<td>http://m.66ip.cn/2.html</td>
+</tr>
+<tr class="odd">
+<td>GoubanjiaProxyListPageParser</td>
+<td>http://www.goubanjia.com/</td>
+</tr>
+</tbody>
+</table>
+<ol start="3" type="1">
+<li>ProxyManager中的Flowable用的很好，值得一看</li>
+<li>使用org.apache.http.impl.client进行网络访问</li>
+<li>RetryHandler重试机制 ### java-iPinfoRobot Scanner？ Scanner输入存储到redis？ 一脸懵 这个项目不是爬取ip的，只是一个乱糟糟的什么机器人。 ### ⭐⭐java-ip-proxy-pools-regularly http.client 进行下载页面。 使用http.client 对proxy进行校验。 ### java-letcheng-ProxyPool 使用Socket测试代理是否有效 没有爬取过程，就是单纯的使用代理的代码。</li>
+</ol>
+<h3 id="java-masker-proxypool-多线程一颗">⭐⭐⭐ java-masker-proxypool 多线程一颗</h3>
+<ol type="1">
+<li><p>http://ip.jiangxianli.com/ http://www.xiladaili.com/gaoni/ http://www.xicidaili.com/nn/ 爬了这些网站</p></li>
+<li><p>定时任务中使用到的 定时任务 类图结构</p>
+<figure>
+<img src="https://mdpic.qoiuy.com/img/mdpic/XiciProxyCollector.png" alt="" /><figcaption>XiciProxyCollector</figcaption>
+</figure></li>
+<li><p>结构很干净</p></li>
+<li><p>http.client 测试代理</p></li>
+<li><p>使用redis存储数据</p></li>
+<li><p>提供api请求</p></li>
+</ol>
+<h3 id="java-proxyservice-布隆过滤器一颗-多个网站一颗">⭐⭐⭐⭐java-proxyservice 布隆过滤器一颗 多个网站一颗</h3>
+<ol type="1">
+<li><p>爬了</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode java"><code class="sourceCode java"><span id="cb1-1"><a href="#cb1-1"></a>* 西刺: http:<span class="co">//www.xicidaili.com/</span></span>
+<span id="cb1-2"><a href="#cb1-2"></a>* 全网代理: http:<span class="co">//www.goubanjia.com/</span></span>
+<span id="cb1-3"><a href="#cb1-3"></a>* 云代理: http:<span class="co">//www.ip3366.net/</span></span>
+<span id="cb1-4"><a href="#cb1-4"></a>* Free <span class="bu">Proxy</span> <span class="bu">List</span>: https:<span class="co">//www.us-proxy.org/</span></span>
+<span id="cb1-5"><a href="#cb1-5"></a>* 无忧代理: http:<span class="co">//www.data5u.com/</span></span>
+<span id="cb1-6"><a href="#cb1-6"></a>* 讯代理: http:<span class="co">//www.xdaili.cn/freeproxy</span></span>
+<span id="cb1-7"><a href="#cb1-7"></a>* 年少HTTP PROXY： http:<span class="co">//www.nianshao.me/</span></span>
+<span id="cb1-8"><a href="#cb1-8"></a>* proxydb: http:<span class="co">//proxydb.net/</span></span>
+<span id="cb1-9"><a href="#cb1-9"></a>* 开心代理: http:<span class="co">//www.kxdaili.com/dailiip.html</span></span>
+<span id="cb1-10"><a href="#cb1-10"></a>* coderbusy: https:<span class="co">//proxy.coderbusy.com/</span></span></code></pre></div></li>
+<li><p>http.client进行数据下载</p></li>
+<li><p>提供了接口</p></li>
+<li><p>将下载具体翻页等进行了策略模式处理。</p></li>
+<li><p>代理校验使用了布隆过滤器见ProxyCheck</p></li>
+<li><p>代理校验使用java.net.InetSocketAddress 测试proxy 见ProxyCheck</p></li>
+</ol>
+<h3 id="java-remoteip-servlet-filter-servlet过滤器">⭐⭐⭐⭐java-remoteip-servlet-filter Servlet过滤器</h3>
+<p>Servlet filter for capturing the original client IP when the http request is proxied.</p>
+<p>Servlet过滤器，用于在代理http请求时捕获原始客户机IP。</p>
+<p>大神代码，看不懂</p>
+<h3 id="java-replication-datasource-和爬虫无关移除">java-replication-datasource 和爬虫无关，移除</h3>
+<h3 id="java-shishir139-proxyserver-一个..聊天的项目">java-shishir139-ProxyServer 一个..聊天的项目</h3>
+<h3 id="java-spring-boot-data-source-decorator-和爬虫无关移除">java-spring-boot-data-source-decorator 和爬虫无关，移除</h3>
+<h3 id="java-tcp-proxy-简易的tcp-proxy实现">java-tcp-proxy 简易的tcp proxy实现</h3>
+<h3 id="java-tewinsid-proxypool">⭐java-tewinsid-proxyPool</h3>
+<ol type="1">
+<li><p>redis</p></li>
+<li><p>代码风格差，</p></li>
+<li><p>httpclient+java.net.proxy</p></li>
+<li><p>Getter爬取类</p></li>
+<li><p>使用正则解析数据</p></li>
+<li><p>爬取了https://www.kuaidaili.com/free/inha/ https://www.xicidaili.com/wt/ http://www.data5u.com/ https://www.xroxy.com/free-proxy-lists/?country=CN http://www.66ip.cn/</p></li>
+</ol>
+<h3 id="java-zhaozuodong-proxyserver">⭐⭐⭐⭐java-zhaozuodong-ProxyServer</h3>
+<p>大神代码，一个代理服务器。</p>
+<p>测试一下，直接使用代理和通过代理服务器两种实现的数据返回时间。</p>
+<h3 id="java-zhyx-proxy-pool">⭐⭐⭐java-zhyx-proxy-pool</h3>
+<ol type="1">
+<li>解析了https://www.xicidaili.com/nn https://www.kuaidaili.com/free/</li>
+<li>看着这个代码好熟悉啊。好像是前面的谁的代码。 生产者消费者，然后将处理完的队列放在redis中。</li>
+</ol>
+<h3 id="到现在-还有几个项目没有看">⭐⭐⭐到现在 还有几个项目没有看？</h3>
+<p>这次看了15个项目加上前面6个共21个 还差3个相对比较大的项目 没有看。看完了再总结下就准备开发我自己的代理池了。嗯</p>
