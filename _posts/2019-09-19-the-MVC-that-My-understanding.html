@@ -1,0 +1,49 @@
+---
+layout: post
+title: 我对MVC有哪些理解（3年经验）
+subtitle: 伟哥最近面试，我正好看到这个问题了，小小总结一下
+date:  2019-09-19 10:34
+header-img:  img/in-post/the-MVC-that-My-understanding.jpg
+---
+
+<h3 id="你对mvc有哪些理解">你对MVC有哪些理解</h3>
+<ul>
+<li><p>level0 知道是啥</p></li>
+<li><p>level1 知道分别代表啥 常见mvc实现框架</p></li>
+<li><p>level2 从设计模式角度分析mvc 常见的三个模式必须分析到位，组合，观察者，策略</p></li>
+<li><p>lavel3 结合一个到两个简单非mvc项目，实际谈mvc优缺点。例如敏捷开发效率的提升，代码维护迭代更新的便捷</p></li>
+</ul>
+<h3 id="level-0-1-mvc是啥常见实现">level 0-1 mvc是啥,常见实现</h3>
+<h4 id="我瞎说的"><strong>我瞎说的</strong></h4>
+<p>软件架构模式 MVC 分别代表 Model,view,controller.Model代表模型，用来存储和处理请求的数据。view 是视图，用来处理前端页面，额，给前端返回回去的数据，比如html，jsp，json，xml等。controller是控制器，用来定义和处理业务。至于常见的实现嘛，得回头看我开发用过的几套框架</p>
+<ul>
+<li><p>我们经常说的SSM框架 (springmvc+spring+mybatis )，其中springmvc用来处理视图，spring用来编程各种各样的控制器，mybatis是持久化工具。虽然SSM是常见的MVC框架，但我不认为mybatis是处在MVC框架中的，而mybatis所处理的实体类DTO/VO/DO 才是MVC框架中的Model。</p></li>
+<li><p>struts2+Spring+hibernate也类似 struts2是View，Spring是Controller，Hibernate是持久化工具，实体类是model</p></li>
+</ul>
+<h4 id="网上的答案"><strong>网上的答案</strong></h4>
+<h5 id="什么是mvc">什么是mvc</h5>
+<ul>
+<li><p>视图是用户看到并与之交互的界面。视图向用户显示相关的数据，并接受用户的输入。视图不进行任何业务逻辑处理。</p></li>
+<li><p>模型: 模型表示业务数据和业务处理。相当于JavaBean。一个模型能为多个视图提供数据。这提高了应用程序的重用性 。</p></li>
+<li><p>控制器: 当用户单击Web页面中的提交按钮时,控制器接受请求并调用相应的模型去处理请求。</p></li>
+</ul>
+<h5 id="mvc与ssm框架联系">mvc与SSM框架联系</h5>
+<p>SSM主要由Spring，SpringMVC 和 Mybatis三个构成。它们在三层架构中所处的位置是不同的，即它们在三层架构中的功能各不相同，各司其职</p>
+<p>SpringMVC：作为View层的实现者，完成用户的请求接收功能。SpringMVC的Controller作为整个应用的控制器，完成用户请求的转发及对用户的响应</p>
+<p>MyBatis：作为 Dao层的实现者，完成对数据库的增、删、改、查功能</p>
+<p>Spring：以整个应用大管家的身份出现。整个应用中所有的Bean的生命周期行为，均由Spring来管理。即整个应用中所有对象的创建、初始化、销毁，及对象间关联关系的维护，均由Spring进行管理</p>
+<h5 id="mvc与ssh框架联系">mvc与SSH框架联系</h5>
+<p>模型层，用hibernate框架让javaBean在数据库生成表及关联，通过对javaBean的操作来对数据库进行操作；</p>
+<p>视图层，用jsp模板把页面展现给用户以及提供与用户的交互；</p>
+<p>控制层，用strust框架来连接数据层和视图层的接收、处理、发送数据并控制流程。spring框架粘和了hibernate和struts,透明的管理了整个架构，提供IOC容器使代码松耦合以及AOP框架的切面功能等等。</p>
+<h3 id="level2-从设计模式角度分析mvc">level2 从设计模式角度分析mvc</h3>
+<p>实话：我本人是没有太多理解的。只能去网上找一些别人写好的理解去验证。</p>
+<p>不少人推崇<a href="https://www.cnblogs.com/twoheads/p/10178021.html">《Design Patterns: Elements of Reusable Object-Oriented Software》</a>或者<a href="https://zhuanlan.zhihu.com/p/35680070">《head first设计模式》</a>中对于MVC的分析。 我是没看过这两本书的，只是大体看了网上的一些说法之后 瞎bb一下我对mvc和设计模式的理解。首先三个模式必须分析到位，组合，观察者，策略。</p>
+<p>组合模式被用于视图层，一个前端web页面的展示是由多个子类/子模块/子页面 组合在一起来展示。所以组合模式必不可少。</p>
+<p>观察者的话是针对model和view来说的。 view观察model的变化，其他的我也不敢瞎说了。自行补充。</p>
+<p>策略模式指的是controller和view的关系。controller是view实现的一个策略。</p>
+<h3 id="lavel3-结合一个到两个简单非mvc项目实际谈mvc优缺点">lavel3 结合一个到两个简单非mvc项目，实际谈mvc优缺点。</h3>
+<p>要是我来讲的话 我得虚构一个项目：我之前帮朋友处理过一个很老的项目，没有用mvc…吧啦吧啦..就能把mvc的优缺点带入。 说真的 这个需要我自己去写一个烂项目。这个项目怎么写呢？</p>
+<p><a href="https://blog.csdn.net/sunforraining/article/details/79015080">网上有一篇说的很详细的</a></p>
+<p>　　优点：分层，结构清晰，耦合性低，大型项目代码的复用性得到极大的提高，开发人员分工明确，提高了开发的效率，维护方便，降低了维护成本。</p>
+<p>　　缺点：简单的小型项目，使用MVC设计反而会降低开发效率，层和层虽然相互分离，但是之间关联性太强，没有做到独立的重用。</p>
