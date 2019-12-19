@@ -12,3 +12,5 @@
 ### pic save for aliyun oss
 
 ### and so on
+
+#### 启动命令 jekyll s
