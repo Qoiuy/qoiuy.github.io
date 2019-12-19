@@ -68,7 +68,8 @@ ga_domain: www.qoiuy.com
 
 # Sidebar settings
 sidebar: true                           # whether or not using Sidebar.
-sidebar-about-description: "富一代目标完成度：0%"
+sidebar-about-description: "我又不是天才，我怎么能看得懂别人的源码!" #2019-12-19 01:49
+#sidebar-about-description: "富一代目标完成度：0%"
 sidebar-avatar: /img/avatar-hux.jpg      # use absolute URL, seeing it's used in both `/` and `/about/`
 
 
